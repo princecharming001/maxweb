@@ -24,6 +24,10 @@ const maxes = [
     description: "Styling tricks, angles, and subtle enhancements that compound.",
   },
   {
+    name: "bonemax",
+    description: "Mewing, jaw exercises, and protocols for reshaping facial structure over time.",
+  },
+  {
     name: "hormonemax",
     description: "Sleep, nutrition, and lifestyle habits for peak hormonal health.",
   },
