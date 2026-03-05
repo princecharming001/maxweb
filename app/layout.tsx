@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Max — Your AI Looksmaxxing Coach",
+  title: "max",
   description:
     "Personalized looksmaxxing advice texted to your phone daily. Skincare, fitness, style — all coached by AI.",
 };
