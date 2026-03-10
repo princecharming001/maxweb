@@ -112,7 +112,7 @@ export default function SMSPreview() {
               Coaching that<br />comes to you
             </h2>
             <p className="mt-5 text-muted text-[16px] leading-relaxed">
-              Max texts you personalized advice throughout the day. No app to open, no dashboard to check. Just real guidance in your messages.
+              Max texts you personalized advice throughout the day. Onboard in the app, then get real guidance straight to your messages.
             </p>
           </div>
 
