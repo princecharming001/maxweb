@@ -4,7 +4,7 @@ export default function Hero() {
   return (
     <section className="relative h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
       <div className="text-center">
-        <h1 className="hero-title text-[clamp(4.5rem,16vw,12rem)] font-normal tracking-[-0.05em] leading-[0.85] select-none animate-fade-in text-foreground/85">
+        <h1 className="hero-title text-[clamp(4.5rem,16vw,12rem)] font-normal tracking-[-0.05em] leading-[0.85] select-none animate-fade-in text-black">
           max
         </h1>
         <p
