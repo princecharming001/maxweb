@@ -1,7 +1,7 @@
 import AuthForm from "@/components/AuthForm";
 
 export const metadata = {
-  title: "Sign Up — Max",
+  title: "Join Waitlist — Max",
 };
 
 export default function SignupPage() {

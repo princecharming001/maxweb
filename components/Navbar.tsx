@@ -51,12 +51,6 @@ export default function Navbar() {
 
         <div className="flex items-center justify-end gap-3">
           <Link
-            href="/login"
-            className="hidden md:inline-flex text-[13px] text-muted hover:text-foreground transition-colors"
-          >
-            Sign in
-          </Link>
-          <Link
             href="/signup"
             className="bg-foreground text-background text-[13px] px-5 py-1.5 rounded-full hover:bg-foreground/85 transition-colors"
           >
@@ -116,13 +110,6 @@ export default function Navbar() {
           >
             Waitlist
           </a>
-          <Link
-            href="/login"
-            className="block text-muted hover:text-foreground"
-            onClick={() => setMenuOpen(false)}
-          >
-            Sign in
-          </Link>
         </div>
       )}
     </nav>
