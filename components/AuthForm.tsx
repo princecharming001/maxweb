@@ -95,10 +95,13 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [phone, setPhone] = useState("");
   const [countryIdx, setCountryIdx] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const termsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -118,6 +121,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (mode === "signup" && !termsAccepted) {
+      setError("You must agree to the terms and conditions to continue.");
+      return;
+    }
 
     const phoneError = validatePhone(phone, selected.code);
     if (phoneError) {
@@ -154,6 +162,8 @@ export default function AuthForm({ mode }: AuthFormProps) {
       setEmail("");
       setPhone("");
       setCountryIdx(0);
+      setTermsAccepted(false);
+      setTermsOpen(false);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -318,6 +328,95 @@ export default function AuthForm({ mode }: AuthFormProps) {
               </div>
             </div>
 
+            {mode === "signup" && (
+              <div className="mt-2">
+                <div ref={termsRef} className="rounded-xl border border-border/80 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setTermsOpen(!termsOpen)}
+                    className="w-full flex items-center justify-between px-4 py-3 text-[13px] font-medium text-foreground/70 hover:bg-card/60 transition-colors cursor-pointer"
+                  >
+                    <span>Terms &amp; Conditions</span>
+                    <svg
+                      className={`w-3.5 h-3.5 text-muted transition-transform duration-200 ${termsOpen ? "rotate-180" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <div
+                    className={`transition-all duration-200 ease-in-out overflow-hidden ${termsOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
+                  >
+                    <div className="px-4 pb-4 text-[12px] leading-relaxed text-muted space-y-2.5 border-t border-border/50 pt-3">
+                      <p>By joining the Max waitlist, you agree to the following:</p>
+                      <ul className="list-disc pl-4 space-y-1.5">
+                        <li>
+                          <strong className="text-foreground/70">SMS Notifications:</strong> You
+                          consent to receive SMS messages from Max, including launch announcements,
+                          early-access invites, and product updates. Message and data rates may
+                          apply. You can opt out at any time by replying STOP.
+                        </li>
+                        <li>
+                          <strong className="text-foreground/70">Email Communications:</strong> You
+                          agree to receive emails related to your waitlist status, product updates,
+                          and occasional promotional content. You may unsubscribe at any time.
+                        </li>
+                        <li>
+                          <strong className="text-foreground/70">Data Collection &amp; Privacy:</strong> Your
+                          personal information (name, email, phone number) will be stored securely
+                          and used solely for the purposes of managing the waitlist, communicating
+                          with you, and improving our services. We will never sell your data to third
+                          parties.
+                        </li>
+                        <li>
+                          <strong className="text-foreground/70">Age Requirement:</strong> You
+                          confirm that you are at least 13 years of age (or the minimum age required
+                          in your jurisdiction).
+                        </li>
+                        <li>
+                          <strong className="text-foreground/70">No Guarantee:</strong> Joining the
+                          waitlist does not guarantee access to Max upon launch. Availability may
+                          vary by region.
+                        </li>
+                        <li>
+                          <strong className="text-foreground/70">Terms Updates:</strong> We reserve
+                          the right to update these terms. Continued participation in the waitlist
+                          after changes constitutes acceptance.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <label className="flex items-start gap-2.5 mt-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => {
+                      setTermsAccepted(e.target.checked);
+                      if (error && e.target.checked) setError("");
+                    }}
+                    className="mt-0.5 h-4 w-4 rounded border-border/80 accent-foreground cursor-pointer shrink-0"
+                  />
+                  <span className="text-[12px] leading-snug text-muted group-hover:text-foreground/60 transition-colors select-none">
+                    I agree to the{" "}
+                    <button
+                      type="button"
+                      onClick={() => setTermsOpen(true)}
+                      className="underline underline-offset-2 text-foreground/70 hover:text-foreground transition-colors"
+                    >
+                      Terms &amp; Conditions
+                    </button>
+                    , including receiving SMS notifications about the Max app launch.
+                  </span>
+                </label>
+              </div>
+            )}
+
             {error && (
               <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-[13px] text-red-600">
                 {error}
@@ -326,7 +425,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (mode === "signup" && !termsAccepted)}
               className="w-full bg-foreground text-background py-3 rounded-xl text-[14px] font-medium hover:bg-foreground/85 transition-all disabled:opacity-50 cursor-pointer mt-1"
             >
               {loading ? "Joining…" : "Join Waitlist"}
