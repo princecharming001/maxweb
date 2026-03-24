@@ -47,6 +47,12 @@ export default function Navbar() {
           >
             Waitlist
           </a>
+          <Link
+            href="/ugc-creators"
+            className="hover:text-foreground transition-colors"
+          >
+            UGC
+          </Link>
         </div>
 
         <div className="flex items-center justify-end gap-3">
@@ -110,6 +116,13 @@ export default function Navbar() {
           >
             Waitlist
           </a>
+          <Link
+            href="/ugc-creators"
+            className="block text-muted hover:text-foreground"
+            onClick={() => setMenuOpen(false)}
+          >
+            UGC
+          </Link>
         </div>
       )}
     </nav>

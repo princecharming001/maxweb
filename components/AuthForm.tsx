@@ -95,13 +95,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [phone, setPhone] = useState("");
   const [countryIdx, setCountryIdx] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const termsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -121,11 +119,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-
-    if (mode === "signup" && !termsAccepted) {
-      setError("You must agree to the terms and conditions to continue.");
-      return;
-    }
 
     const phoneError = validatePhone(phone, selected.code);
     if (phoneError) {
@@ -162,7 +155,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
       setEmail("");
       setPhone("");
       setCountryIdx(0);
-      setTermsAccepted(false);
       setTermsOpen(false);
     } catch {
       setError("Network error. Please try again.");
@@ -330,7 +322,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
             {mode === "signup" && (
               <div className="mt-2">
-                <div ref={termsRef} className="rounded-xl border border-border/80 overflow-hidden">
+                <div className="rounded-xl border border-border/80 overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setTermsOpen(!termsOpen)}
@@ -391,29 +383,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
                     </div>
                   </div>
                 </div>
-
-                <label className="flex items-start gap-2.5 mt-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={termsAccepted}
-                    onChange={(e) => {
-                      setTermsAccepted(e.target.checked);
-                      if (error && e.target.checked) setError("");
-                    }}
-                    className="mt-0.5 h-4 w-4 rounded border-border/80 accent-foreground cursor-pointer shrink-0"
-                  />
-                  <span className="text-[12px] leading-snug text-muted group-hover:text-foreground/60 transition-colors select-none">
-                    I agree to the{" "}
-                    <button
-                      type="button"
-                      onClick={() => setTermsOpen(true)}
-                      className="underline underline-offset-2 text-foreground/70 hover:text-foreground transition-colors"
-                    >
-                      Terms &amp; Conditions
-                    </button>
-                    , including receiving SMS notifications about the Max app launch.
-                  </span>
-                </label>
               </div>
             )}
 
@@ -425,7 +394,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
             <button
               type="submit"
-              disabled={loading || (mode === "signup" && !termsAccepted)}
+              disabled={loading}
               className="w-full bg-foreground text-background py-3 rounded-xl text-[14px] font-medium hover:bg-foreground/85 transition-all disabled:opacity-50 cursor-pointer mt-1"
             >
               {loading ? "Joining…" : "Join Waitlist"}
