@@ -10,10 +10,31 @@ export default function Footer() {
           </Link>
           <span>&copy; {new Date().getFullYear()} Max</span>
         </div>
-        <div className="flex gap-5">
-          <a href="#" className="hover:text-foreground/50 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-foreground/50 transition-colors">Terms</a>
-          <a href="#" className="hover:text-foreground/50 transition-colors">Contact</a>
+        <div className="flex flex-wrap items-center justify-center gap-5">
+          <Link href="/legal" className="hover:text-foreground/50 transition-colors">
+            Legal
+          </Link>
+          <Link href="/legal/privacy" className="hover:text-foreground/50 transition-colors">
+            Privacy
+          </Link>
+          <Link href="/legal/terms" className="hover:text-foreground/50 transition-colors">
+            Terms
+          </Link>
+          <Link
+            href="/legal/community-guidelines"
+            className="hover:text-foreground/50 transition-colors"
+          >
+            Community
+          </Link>
+          <Link href="/legal/cookies" className="hover:text-foreground/50 transition-colors">
+            Cookies
+          </Link>
+          <a
+            href="mailto:support@example.com"
+            className="hover:text-foreground/50 transition-colors"
+          >
+            Contact
+          </a>
         </div>
       </div>
     </footer>
