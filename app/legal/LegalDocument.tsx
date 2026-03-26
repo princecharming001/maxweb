@@ -42,8 +42,7 @@ export default async function LegalDocument({
 
   return (
     <div
-      className="max-w-4xl mx-auto prose prose-slate"
-      style={{ color: "#1d1d1f" }}
+      className="legal-document mx-auto"
       // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: cleaned }}
     />

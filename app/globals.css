@@ -18,6 +18,126 @@ body {
     sans-serif;
 }
 
+/* Legal / policy pages — injected HTML from public/legal/*.html */
+.legal-document {
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  letter-spacing: -0.011em;
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "kern" 1, "liga" 1;
+  max-width: 42rem;
+}
+
+.legal-document header {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+}
+
+.legal-document header h1 {
+  font-size: clamp(1.5rem, 1.35rem + 0.6vw, 1.875rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+  color: var(--color-foreground);
+}
+
+.legal-document .meta {
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.legal-document h2 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+  margin: 2.25rem 0 0.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  color: var(--color-foreground);
+}
+
+/* First section heading: no rule above (direct child only matches our HTML) */
+.legal-document > h2:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 1.25rem;
+}
+
+.legal-document h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+  margin: 1.5rem 0 0.5rem;
+  color: color-mix(in srgb, var(--color-foreground) 92%, var(--color-muted));
+}
+
+.legal-document p {
+  margin: 0 0 1rem;
+  max-width: 65ch;
+}
+
+.legal-document p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-document ul,
+.legal-document ol {
+  margin: 0 0 1.25rem;
+  padding-left: 1.35rem;
+}
+
+.legal-document li {
+  margin-bottom: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.legal-document li:last-child {
+  margin-bottom: 0;
+}
+
+.legal-document strong {
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.legal-document a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s ease;
+}
+
+.legal-document a:hover {
+  color: var(--color-accent-hover);
+}
+
+.legal-document .callout {
+  margin: 1.25rem 0 1.5rem;
+  padding: 1rem 1.125rem;
+  background: var(--color-card);
+  border: 1px solid color-mix(in srgb, var(--color-border) 90%, transparent);
+  border-left: 3px solid var(--color-accent);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.legal-document .callout strong {
+  font-weight: 600;
+}
+
 .hero-title {
   text-shadow:
     0 1px 0 #d4d4d8,
