@@ -20,294 +20,288 @@ export default function PrivacyPage() {
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
           Privacy Policy
         </h1>
-        <p className="mt-3 text-muted text-[13px]">Last updated: April 6, 2026</p>
+        <p className="mt-3 text-muted text-[13px]">
+          <span className="font-medium text-foreground">Effective date:</span>{" "}
+          April 6, 2026
+        </p>
         <p className="mt-4 text-muted text-[15px] leading-relaxed">
-          Max (&ldquo;we&rdquo;, &ldquo;our&rdquo;, or &ldquo;us&rdquo;)
-          respects your privacy. This Privacy Policy explains what information
-          we collect, how we use it, and your rights when using the Max mobile
-          application.
+          Max (&ldquo;Max,&rdquo; &ldquo;we,&rdquo; &ldquo;our,&rdquo; or
+          &ldquo;us&rdquo;) respects your privacy. This Privacy Policy explains
+          what information we collect, how we use it, when we share it, and the
+          choices you have when using our website, mobile application, and
+          related services (collectively, the &ldquo;Services&rdquo;).
         </p>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 1 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
             1. Information We Collect
           </h2>
+          <p className="mt-3 text-muted text-[14px] leading-relaxed">
+            We may collect the following categories of information:
+          </p>
 
           <h3 className="mt-6 text-[15px] font-medium text-foreground">
-            Account Information
+            a. Contact Information
           </h3>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            We collect information you provide when creating or using an
-            account, including:
-          </p>
           <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
             <li>Name</li>
             <li>Email address</li>
             <li>Phone number</li>
+          </ul>
+
+          <h3 className="mt-6 text-[15px] font-medium text-foreground">
+            b. Account and Identifier Information
+          </h3>
+          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
             <li>User ID</li>
+            <li>Account-related identifiers</li>
           </ul>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            This information is used to create and manage your account and is
-            linked to your identity.
-          </p>
 
-          <div className="h-px bg-border/40 my-8" />
-
-          <h3 className="text-[15px] font-medium text-foreground">
-            User Content
+          <h3 className="mt-6 text-[15px] font-medium text-foreground">
+            c. User Content
           </h3>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            We collect content you provide within the app, including:
-          </p>
           <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
+            <li>Photos or videos you upload</li>
             <li>
-              Text inputs (such as messages, prompts, and interactions with the
-              app)
-            </li>
-            <li>
-              Photos or images you upload (including progress photos)
+              Messages, prompts, responses, or other content you submit in the
+              app
             </li>
           </ul>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            This data is used solely to:
-          </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
-            <li>
-              Provide core app functionality (such as analysis, ratings, and
-              responses)
-            </li>
-            <li>Generate results requested by the user</li>
-            <li>Deliver personalized results</li>
-            <li>Track progress over time</li>
-          </ul>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            This information is linked to your identity.
-          </p>
 
-          <div className="h-px bg-border/40 my-8" />
-
-          <h3 className="text-[15px] font-medium text-foreground">
-            Purchase Information
+          <h3 className="mt-6 text-[15px] font-medium text-foreground">
+            d. Purchase Information
           </h3>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            If you make purchases in the app, we collect:
-          </p>
           <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
-            <li>Purchase history (e.g., subscription status)</li>
+            <li>Subscription status</li>
+            <li>Purchase history</li>
+            <li>Transaction status</li>
+            <li>Limited billing-related metadata</li>
           </ul>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            This data is used to:
-          </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
-            <li>Provide access to paid features</li>
-            <li>Manage subscriptions</li>
-          </ul>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            Subscription management and billing are handled by Apple through
-            your Apple ID settings. We do not collect or store full payment
-            details such as credit card numbers.
-          </p>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            This information is linked to your identity.
-          </p>
-
-          <div className="h-px bg-border/40 my-8" />
-
-          <h3 className="text-[15px] font-medium text-foreground">
-            Support Communications
-          </h3>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            If you contact us, we may collect:
-          </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
-            <li>Your email address</li>
-            <li>Your phone number (if provided)</li>
-            <li>The contents of your message</li>
-          </ul>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            This is used solely to respond to support requests.
+            We do not store full payment card numbers on our own servers.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 2 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            2. How We Use Your Information
+            2. How We Use Information
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We use your information to:
+            We use the information we collect to:
           </p>
           <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
-            <li>Provide and operate the app</li>
-            <li>Process user-submitted content</li>
-            <li>Generate results and responses</li>
-            <li>Personalize your experience</li>
-            <li>Manage accounts and subscriptions</li>
+            <li>Provide, operate, and maintain the Services</li>
+            <li>Create and manage user accounts</li>
+            <li>Process purchases and manage subscriptions</li>
+            <li>Deliver app features and personalized results</li>
             <li>
-              Communicate with you (including support or important updates)
+              Analyze photos, videos, prompts, and other submitted content to
+              generate app outputs
             </li>
-            <li>Improve app performance and features</li>
+            <li>Respond to support requests and communicate with you</li>
+            <li>
+              Improve the performance, reliability, and safety of the Services
+            </li>
+            <li>Detect fraud, abuse, security incidents, or misuse</li>
+            <li>Comply with legal obligations</li>
           </ul>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 3 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            3. Data Linking
+            3. How We Share Information
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            The information we collect (including account information, user
-            content, purchase data, and phone number) may be linked to your
-            identity through your account.
+            We may share information in the following situations:
           </p>
-        </section>
-
-        <div className="h-px bg-border/40 my-10" />
-
-        {/* 4 */}
-        <section>
-          <h2 className="text-xl font-semibold tracking-tight">
-            4. Data Sharing
-          </h2>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We may share your information with trusted third-party service
-            providers solely to operate the app, including:
-          </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
+          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-2">
             <li>
-              AI processing services (for generating responses or analyzing
-              content)
+              <strong className="text-foreground font-medium">
+                Service providers:
+              </strong>{" "}
+              We may share information with vendors that help us operate the
+              Services, such as hosting providers, analytics providers, AI
+              infrastructure providers, customer support tools, and payment
+              processors.
             </li>
-            <li>Cloud hosting and infrastructure providers</li>
+            <li>
+              <strong className="text-foreground font-medium">
+                Payment processing:
+              </strong>{" "}
+              Payments and subscription processing may be handled by third-party
+              providers such as Stripe. These providers process payment
+              information according to their own privacy policies and terms.
+            </li>
+            <li>
+              <strong className="text-foreground font-medium">
+                Legal reasons:
+              </strong>{" "}
+              We may disclose information if required by law, regulation, legal
+              process, or governmental request, or if necessary to protect
+              rights, safety, and security.
+            </li>
+            <li>
+              <strong className="text-foreground font-medium">
+                Business transfers:
+              </strong>{" "}
+              We may share or transfer information in connection with a merger,
+              acquisition, financing, reorganization, sale of assets, or
+              similar transaction.
+            </li>
           </ul>
+        </section>
+
+        <div className="h-px bg-border/40 my-10" />
+
+        <section>
+          <h2 className="text-xl font-semibold tracking-tight">
+            4. Data Linked to Your Identity
+          </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We may share user-provided content (such as text inputs and images)
-            with third-party AI service providers solely for the purpose of
-            generating responses and analyzing content within the app.
-          </p>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We do not sell your personal data and do not share your data for
-            advertising purposes.
+            The information described above may be linked to your identity and
+            used to provide app functionality, account management,
+            personalization, subscription access, and support.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 5 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
             5. Data Retention
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We retain your data only as long as necessary to provide the
-            app&apos;s functionality and improve our services, unless a longer
-            retention period is required by law.
+            We retain personal information for as long as reasonably necessary
+            to provide the Services, maintain your account, complete
+            transactions, resolve disputes, enforce our agreements, comply with
+            legal obligations, and protect the security and integrity of the
+            Services.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 6 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            6. Your Rights
+            6. Data Deletion
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            You may request access to, correction of, or deletion of your data
-            by contacting:
-          </p>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            Email:{" "}
+            You may request deletion of your account and personal information by
+            contacting us at{" "}
             <a
               href="mailto:mog.max123@gmail.com"
               className="text-foreground underline underline-offset-2"
             >
               mog.max123@gmail.com
             </a>
-          </p>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            We will respond within a reasonable timeframe.
+            . We may retain certain information where required for legal,
+            security, fraud prevention, billing, or compliance purposes.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 7 */}
         <section>
-          <h2 className="text-xl font-semibold tracking-tight">
-            7. Security
-          </h2>
+          <h2 className="text-xl font-semibold tracking-tight">7. Security</h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We take reasonable measures to protect your information from
-            unauthorized access, loss, misuse, or alteration.
+            We use reasonable administrative, technical, and organizational
+            measures to help protect personal information. However, no method of
+            transmission over the internet or method of electronic storage is
+            completely secure, and we cannot guarantee absolute security.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 8 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
             8. Children&apos;s Privacy
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            Max is not intended for children under the age of 13. We do not
-            knowingly collect personal information from children.
+            The Services are not directed to children under 13, and we do not
+            knowingly collect personal information from children under 13. If
+            you believe a child has provided personal information to us, please
+            contact us and we will take appropriate steps to delete it.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 9 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            9. Changes to This Policy
+            9. Your Choices
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We may update this Privacy Policy from time to time. Continued use
-            of the app after changes constitutes acceptance of the updated
-            policy.
+            You may choose not to provide certain information, but some
+            features of the Services may not function properly as a result. You
+            may also contact us to request access, correction, or deletion of
+            your information where applicable.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 10 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            10. Contact Us
+            10. Third-Party Services
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            If you have any questions about this Privacy Policy, contact us at:
-          </p>
-          <p className="mt-2 text-muted text-[14px] leading-relaxed">
-            <a
-              href="mailto:mog.max123@gmail.com"
-              className="text-foreground underline underline-offset-2"
-            >
-              mog.max123@gmail.com
-            </a>
+            The Services may rely on third-party tools, platforms, and
+            infrastructure. Your use of certain third-party services may also be
+            subject to those third parties&apos; privacy policies and terms.
           </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
-        {/* 11 */}
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            11. Tracking
+            11. Changes to This Privacy Policy
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We do not use your data for tracking purposes and do not share your
-            data with third parties for advertising or cross-app tracking.
+            We may update this Privacy Policy from time to time. If we make
+            material changes, we will update the effective date above and may
+            provide additional notice where appropriate.
           </p>
+        </section>
+
+        <div className="h-px bg-border/40 my-10" />
+
+        <section>
+          <h2 className="text-xl font-semibold tracking-tight">
+            12. Contact Us
+          </h2>
+          <p className="mt-3 text-muted text-[14px] leading-relaxed">
+            If you have questions about this Privacy Policy or our data
+            practices, you can contact us at:
+          </p>
+          <div className="mt-4 text-muted text-[14px] leading-relaxed space-y-1">
+            <p className="font-medium text-foreground">Max</p>
+            <p>
+              Email:{" "}
+              <a
+                href="mailto:mog.max123@gmail.com"
+                className="text-foreground underline underline-offset-2"
+              >
+                mog.max123@gmail.com
+              </a>
+            </p>
+            <p>
+              Website:{" "}
+              <a
+                href="https://maxmaxmax.today"
+                className="text-foreground underline underline-offset-2"
+              >
+                https://maxmaxmax.today
+              </a>
+            </p>
+          </div>
         </section>
 
         <div className="mt-16">
