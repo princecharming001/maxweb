@@ -32,28 +32,41 @@ export default function SupportPage() {
           <h2 className="text-xl font-semibold tracking-tight">
             Contact Information
           </h2>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            Support Email:{" "}
-            <a
-              href="mailto:mog.max123@gmail.com"
-              className="text-foreground underline underline-offset-2"
-            >
-              mog.max123@gmail.com
-            </a>
-          </p>
-          <p className="mt-4 text-muted text-[14px] leading-relaxed">
+          <ul className="mt-4 text-muted text-[14px] leading-relaxed space-y-2">
+            <li>
+              <span className="font-medium text-foreground">Support email:</span>{" "}
+              <a
+                href="mailto:support@maxmaxmax.today"
+                className="text-foreground underline underline-offset-2"
+              >
+                support@maxmaxmax.today
+              </a>
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Phone:</span>{" "}
+              <a
+                href="tel:+15103626544"
+                className="text-foreground underline underline-offset-2"
+              >
+                +1 (510) 362-6544
+              </a>
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Business address:</span>{" "}
+              1481 Peralta Boulevard
+            </li>
+          </ul>
+
+          <p className="mt-6 text-muted text-[14px] leading-relaxed">
             When contacting support, please include:
           </p>
           <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
-            <li>Device model (e.g., iPhone 13, iPhone 15 Pro)</li>
+            <li>Device model</li>
             <li>iOS version</li>
             <li>App version (if known)</li>
             <li>A clear description of the issue</li>
-            <li>Screenshots (if applicable)</li>
+            <li>Screenshots, if applicable</li>
           </ul>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            Providing this information helps us resolve your issue faster.
-          </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
@@ -74,14 +87,12 @@ export default function SupportPage() {
           <h2 className="text-xl font-semibold tracking-tight">
             Scope of Support
           </h2>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            We can assist with:
-          </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
+          <ul className="mt-3 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
             <li>Account access or login issues</li>
             <li>App crashes, bugs, or performance problems</li>
             <li>Subscription and billing inquiries</li>
             <li>Questions about features or app functionality</li>
+            <li>General feedback and feature requests</li>
           </ul>
         </section>
 
@@ -89,35 +100,88 @@ export default function SupportPage() {
 
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            Subscriptions & Billing
+            Subscriptions &amp; Billing
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            Max may offer in-app purchases and subscription-based features.
+            Max uses recurring subscriptions processed by{" "}
+            <strong className="text-foreground font-medium">Stripe</strong>. On
+            supported devices, checkout may include{" "}
+            <strong className="text-foreground font-medium">Apple Pay</strong>{" "}
+            or{" "}
+            <strong className="text-foreground font-medium">Google Pay</strong>
+            , as well as standard card payment methods.
           </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
+
+          <p className="mt-4 text-muted text-[14px] leading-relaxed">
+            Subscription billing terms:
+          </p>
+          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-2">
+            <li>Your subscription renews automatically until canceled.</li>
             <li>
-              All payments are processed through your Apple ID via Apple
+              The renewal term is:{" "}
+              <strong className="text-foreground font-medium">weekly</strong>.
             </li>
             <li>
-              Subscriptions renew automatically unless canceled at least 24
-              hours before the end of the current billing period
+              Each billing period includes access to the Max app for your
+              selected plan:
+              <ul className="mt-2 list-disc pl-5 space-y-2">
+                <li>
+                  <strong className="text-foreground font-medium">
+                    Chadlite (Basic)
+                  </strong>{" "}
+                  — up to 2 active maxxes, community forums, one face scan at
+                  signup (Basic does not include additional scans), basic course
+                  library.
+                </li>
+                <li>
+                  <strong className="text-foreground font-medium">
+                    Chad (Premium)
+                  </strong>{" "}
+                  — up to 3 active maxxes, exclusive forums, daily face scans,
+                  full course library, and other Premium features shown in the
+                  app at purchase.
+                </li>
+              </ul>
             </li>
             <li>
-              You can manage or cancel subscriptions at any time in your Apple
-              ID account settings
+              You will be charged in{" "}
+              <strong className="text-foreground font-medium">USD</strong>:{" "}
+              <strong className="text-foreground font-medium">
+                $3.99 per week
+              </strong>{" "}
+              for Chadlite (Basic) or{" "}
+              <strong className="text-foreground font-medium">
+                $5.99 per week
+              </strong>{" "}
+              for Chad (Premium), plus applicable taxes where required.
+            </li>
+            <li>
+              You can cancel at any time by: opening the Max app, going to{" "}
+              <strong className="text-foreground font-medium">
+                Profile → Manage subscription
+              </strong>{" "}
+              (or your subscription management screen), and following the
+              prompts to cancel. You may also manage or cancel through links in
+              Stripe receipts or the Stripe customer portal when available.
+              Cancellation stops future renewals; timing of access until the end
+              of the paid period follows Stripe and your plan settings.
             </li>
           </ul>
+
           <p className="mt-4 text-muted text-[14px] leading-relaxed">
-            For billing-related issues, please include:
+            Subscription status is synced with our backend through secure
+            billing events and webhooks.
+          </p>
+
+          <p className="mt-4 text-muted text-[14px] leading-relaxed">
+            When contacting us about billing, please include:
           </p>
           <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
             <li>The email associated with your account</li>
-            <li>Details of the issue</li>
+            <li>The date of the charge</li>
+            <li>The amount charged</li>
+            <li>A brief description of the issue</li>
           </ul>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            If you believe you were charged incorrectly, you may also contact
-            Apple Support directly.
-          </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
@@ -126,52 +190,42 @@ export default function SupportPage() {
           <h2 className="text-xl font-semibold tracking-tight">
             Troubleshooting
           </h2>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            Before contacting support, we recommend trying the following:
-          </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
+          <ul className="mt-3 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
             <li>Restart the app</li>
             <li>Update to the latest version of iOS</li>
-            <li>Update the app to the latest version</li>
+            <li>Update the app to the latest version from the App Store</li>
             <li>Reinstall the app</li>
           </ul>
-          <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            These steps resolve most common issues.
-          </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
 
         <section>
           <h2 className="text-xl font-semibold tracking-tight">
-            Privacy & Data Usage
+            Privacy &amp; Data Usage
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            Max may process user-provided data, including images, to deliver
-            core app functionality. We are committed to protecting your privacy
-            and handling data responsibly.
+            Max may process user-provided data, including images and account
+            information, to deliver core app functionality. We are committed to
+            handling user data responsibly.
           </p>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            For more information:
+            For more information, please review our{" "}
+            <Link
+              href="/legal/privacy"
+              className="text-foreground underline underline-offset-2"
+            >
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/legal/terms"
+              className="text-foreground underline underline-offset-2"
+            >
+              Terms of Service
+            </Link>
+            .
           </p>
-          <ul className="mt-2 text-muted text-[14px] leading-relaxed list-disc pl-5 space-y-1">
-            <li>
-              <Link
-                href="/legal/privacy"
-                className="text-foreground underline underline-offset-2"
-              >
-                Privacy Policy
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/legal/terms"
-                className="text-foreground underline underline-offset-2"
-              >
-                Terms of Service
-              </Link>
-            </li>
-          </ul>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
@@ -185,7 +239,7 @@ export default function SupportPage() {
                 1. The app is not working as expected. What should I do?
               </h3>
               <p className="mt-1 text-muted text-[14px] leading-relaxed">
-                Ensure your app and iOS are up to date. Restart the app or
+                Make sure your app and iOS are up to date. Restart the app or
                 reinstall it if needed.
               </p>
             </div>
@@ -194,8 +248,8 @@ export default function SupportPage() {
                 2. I have a billing or subscription issue.
               </h3>
               <p className="mt-1 text-muted text-[14px] leading-relaxed">
-                Check your Apple ID subscription settings. If the issue
-                persists, contact us with your details.
+                Contact support with your account email, charge date, amount,
+                and issue details so we can investigate.
               </p>
             </div>
             <div>
@@ -211,15 +265,15 @@ export default function SupportPage() {
                 4. How is my data used?
               </h3>
               <p className="mt-1 text-muted text-[14px] leading-relaxed">
-                Your data is used only to provide and improve app functionality.
-                Please refer to our{" "}
+                Your data is used to provide and improve app functionality.
+                Please review our{" "}
                 <Link
                   href="/legal/privacy"
                   className="text-foreground underline underline-offset-2"
                 >
                   Privacy Policy
                 </Link>{" "}
-                for full details.
+                for more details.
               </p>
             </div>
           </div>
@@ -232,14 +286,33 @@ export default function SupportPage() {
             Additional Inquiries
           </h2>
           <p className="mt-3 text-muted text-[14px] leading-relaxed">
-            For non-support inquiries (e.g., partnerships):{" "}
-            <a
-              href="mailto:mog.max123@gmail.com"
-              className="text-foreground underline underline-offset-2"
-            >
-              mog.max123@gmail.com
-            </a>
+            For non-support inquiries, including partnerships or business
+            questions, contact:
           </p>
+          <ul className="mt-3 text-muted text-[14px] leading-relaxed space-y-2">
+            <li>
+              <span className="font-medium text-foreground">Email:</span>{" "}
+              <a
+                href="mailto:support@maxmaxmax.today"
+                className="text-foreground underline underline-offset-2"
+              >
+                support@maxmaxmax.today
+              </a>
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Phone:</span>{" "}
+              <a
+                href="tel:+15103626544"
+                className="text-foreground underline underline-offset-2"
+              >
+                +1 (510) 362-6544
+              </a>
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Business address:</span>{" "}
+              1481 Peralta Boulevard
+            </li>
+          </ul>
         </section>
 
         <div className="mt-16">
