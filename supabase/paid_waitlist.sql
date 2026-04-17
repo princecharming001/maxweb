@@ -15,8 +15,20 @@ create table if not exists public.paid_waitlist (
   updated_at timestamptz not null default now()
 );
 
-create unique index if not exists paid_waitlist_email_lower_key
-  on public.paid_waitlist (lower(email));
+-- Note: the API always lowercases email before inserting, so a plain unique
+-- constraint on email is sufficient (and required for upsert onConflict:"email").
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'paid_waitlist_email_key'
+  ) then
+    alter table public.paid_waitlist
+      add constraint paid_waitlist_email_key unique (email);
+  end if;
+end $$;
+
+-- Drop the legacy expression-based index if it was created by a prior migration.
+drop index if exists public.paid_waitlist_email_lower_key;
 
 create index if not exists paid_waitlist_stripe_pi_idx
   on public.paid_waitlist (stripe_payment_intent_id);
