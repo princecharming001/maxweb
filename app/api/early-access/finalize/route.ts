@@ -42,8 +42,15 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ paid: true });
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Failed to finalize payment";
+    console.error("[/api/early-access/finalize] error:", err);
+    let message = "Failed to finalize payment";
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (err && typeof err === "object") {
+      const maybe = err as { message?: unknown; error?: unknown };
+      if (typeof maybe.message === "string") message = maybe.message;
+      else if (typeof maybe.error === "string") message = maybe.error;
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

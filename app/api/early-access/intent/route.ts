@@ -127,8 +127,15 @@ export async function POST(req: NextRequest) {
       currency: EARLY_ACCESS_CURRENCY,
     });
   } catch (err: unknown) {
-    const message =
-      err instanceof Error ? err.message : "Failed to start checkout";
+    console.error("[/api/early-access/intent] error:", err);
+    let message = "Failed to start checkout";
+    if (err instanceof Error) {
+      message = err.message;
+    } else if (err && typeof err === "object") {
+      const maybe = err as { message?: unknown; error?: unknown };
+      if (typeof maybe.message === "string") message = maybe.message;
+      else if (typeof maybe.error === "string") message = maybe.error;
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
