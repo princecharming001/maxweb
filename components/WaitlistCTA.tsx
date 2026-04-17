@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useRef, useEffect, FormEvent } from "react";
 
 const COUNTRY_CODES = [
@@ -176,13 +177,13 @@ export default function WaitlistCTA() {
             goes live.
           </p>
           <p className="mt-2 text-[12px] text-muted/80">
-            Want in sooner?{" "}
-            <a
-              href="/early-access"
+            Ready to pay?{" "}
+            <Link
+              href="/pay"
               className="text-foreground font-medium underline-offset-2 hover:underline"
             >
-              Get Early Access for $7.99
-            </a>
+              Register here
+            </Link>
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-3 text-left">

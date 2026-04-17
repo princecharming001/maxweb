@@ -37,7 +37,7 @@ export async function GET() {
       ok: allOk,
       checks,
       hint: allOk
-        ? "Core env vars look set. POST /api/early-access/intent saves signup and returns a Stripe Payment Link URL."
+        ? "Core env vars look set. POST /api/max-waitlist registers email + password to max_waitlist."
         : "Fix missing or wrong env vars on your host (Vercel). SUPABASE_SERVICE_ROLE_KEY must be the service_role JWT (role claim = service_role).",
     },
     { status: allOk ? 200 : 503 },

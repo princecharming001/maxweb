@@ -22,7 +22,7 @@ export function assertSupabaseServiceRoleKey(key: string): void {
   const role = getSupabaseJwtRole(key);
   if (role === "anon" || role === "authenticated") {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY must be the service_role secret (Supabase Dashboard → Project Settings → API → service_role). The anon key cannot write to RLS-protected tables like paid_waitlist.",
+      "SUPABASE_SERVICE_ROLE_KEY must be the service_role secret (Supabase Dashboard → Project Settings → API → service_role). The anon key cannot replace the service_role secret for server-side writes.",
     );
   }
 }
