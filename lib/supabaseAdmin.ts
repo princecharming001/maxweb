@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { assertSupabaseServiceRoleKey } from "@/lib/supabaseJwt";
 
 let _supabaseAdmin: SupabaseClient | null = null;
 
@@ -12,6 +13,8 @@ export function getSupabaseAdmin(): SupabaseClient {
         "Supabase admin is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
       );
     }
+
+    assertSupabaseServiceRoleKey(key);
 
     _supabaseAdmin = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },

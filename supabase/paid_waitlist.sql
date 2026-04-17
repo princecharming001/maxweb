@@ -49,3 +49,15 @@ create trigger paid_waitlist_set_updated_at
   for each row execute function public.paid_waitlist_set_updated_at();
 
 alter table public.paid_waitlist enable row level security;
+
+-- Explicit policies for the service_role DB role (see paid_waitlist_rls_service_role.sql).
+drop policy if exists "paid_waitlist_service_role_all" on public.paid_waitlist;
+create policy "paid_waitlist_service_role_all"
+  on public.paid_waitlist
+  for all
+  to service_role
+  using (true)
+  with check (true);
+
+revoke all on public.paid_waitlist from anon, authenticated;
+grant select, insert, update, delete on public.paid_waitlist to service_role;

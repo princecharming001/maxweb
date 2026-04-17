@@ -1,16 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getSupabase() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error("Supabase is not configured");
-  }
-
-  return createClient(url, key);
-}
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
 const PHONE_RE = /^\+\d{1,4}\d{7,15}$/;
 const PLATFORMS = new Set([
@@ -153,7 +142,7 @@ export async function POST(req: NextRequest) {
       notesValue = trimmed;
     }
 
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
     const { error } = await supabase.from("ugc_creator_applications").insert([
       {
         full_name: full_name.trim(),
