@@ -169,10 +169,20 @@ export default function WaitlistCTA() {
         <div className="max-w-md mx-auto text-center">
           <div className="w-8 h-px bg-border mx-auto mb-10" />
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-            Get early access
+            Join the free waitlist
           </h2>
           <p className="mt-3 text-muted text-[15px] max-w-xs mx-auto leading-relaxed">
-            Join the waitlist. Be first in line when Max starts texting.
+            Not ready to pay? Drop your info and we&apos;ll text you when Max
+            goes live.
+          </p>
+          <p className="mt-2 text-[12px] text-muted/80">
+            Want in sooner?{" "}
+            <a
+              href="/early-access"
+              className="text-foreground font-medium underline-offset-2 hover:underline"
+            >
+              Get Early Access for $7.99
+            </a>
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-3 text-left">

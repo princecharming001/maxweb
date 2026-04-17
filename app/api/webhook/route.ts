@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
+import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
@@ -43,6 +44,41 @@ export async function POST(req: NextRequest) {
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
       console.log("Subscription canceled:", subscription.id);
+      break;
+    }
+    case "payment_intent.succeeded": {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      if (intent.metadata?.product === "max_early_access") {
+        try {
+          const supabase = getSupabaseAdmin();
+          await supabase
+            .from("paid_waitlist")
+            .update({
+              status: "paid",
+              paid_at: new Date().toISOString(),
+              stripe_customer_id:
+                typeof intent.customer === "string" ? intent.customer : null,
+            })
+            .eq("stripe_payment_intent_id", intent.id);
+        } catch (err) {
+          console.error("Failed to mark paid_waitlist as paid:", err);
+        }
+      }
+      break;
+    }
+    case "payment_intent.payment_failed": {
+      const intent = event.data.object as Stripe.PaymentIntent;
+      if (intent.metadata?.product === "max_early_access") {
+        try {
+          const supabase = getSupabaseAdmin();
+          await supabase
+            .from("paid_waitlist")
+            .update({ status: "failed" })
+            .eq("stripe_payment_intent_id", intent.id);
+        } catch (err) {
+          console.error("Failed to mark paid_waitlist as failed:", err);
+        }
+      }
       break;
     }
   }

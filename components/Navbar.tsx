@@ -57,10 +57,19 @@ export default function Navbar() {
 
         <div className="flex items-center justify-end gap-3">
           <Link
-            href="/signup"
-            className="bg-foreground text-background text-[13px] px-5 py-1.5 rounded-full hover:bg-foreground/85 transition-colors"
+            href="/early-access"
+            className="hidden sm:inline-flex items-center gap-2 bg-foreground text-background text-[13px] pl-4 pr-1.5 py-1 rounded-full hover:bg-foreground/85 transition-colors"
           >
-            Get Started
+            <span>Get Early Access</span>
+            <span className="inline-flex items-center rounded-full bg-background/15 px-2 py-0.5 text-[10px] tracking-wide">
+              $7.99
+            </span>
+          </Link>
+          <Link
+            href="/early-access"
+            className="sm:hidden bg-foreground text-background text-[13px] px-4 py-1.5 rounded-full hover:bg-foreground/85 transition-colors"
+          >
+            Early Access
           </Link>
 
           <button
@@ -122,6 +131,13 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           >
             UGC
+          </Link>
+          <Link
+            href="/early-access"
+            className="block text-foreground font-medium"
+            onClick={() => setMenuOpen(false)}
+          >
+            Get Early Access · $7.99
           </Link>
         </div>
       )}
