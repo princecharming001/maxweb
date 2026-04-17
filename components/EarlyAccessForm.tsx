@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,8 +9,9 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import type { StripeElementsOptions } from "@stripe/stripe-js";
+import type { Stripe, StripeElementsOptions } from "@stripe/stripe-js";
 import { getStripeClient } from "@/lib/stripeClient";
+import { networkErrorMessage } from "@/lib/networkErrorMessage";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -160,7 +161,10 @@ export default function EarlyAccessForm() {
   const [amount, setAmount] = useState<number>(799);
   const [currency, setCurrency] = useState<string>("usd");
 
-  const stripePromise = useMemo(() => getStripeClient(), []);
+  /** Resolved Stripe.js instance for the payment step (null = failed to load). */
+  const [stripeInstance, setStripeInstance] = useState<
+    Stripe | null | "pending"
+  >("pending");
 
   useEffect(() => {
     document.body.style.backgroundColor = "var(--color-background)";
@@ -168,6 +172,21 @@ export default function EarlyAccessForm() {
       document.body.style.backgroundColor = "";
     };
   }, []);
+
+  useEffect(() => {
+    if (step !== "payment" || !clientSecret) {
+      setStripeInstance("pending");
+      return;
+    }
+    setStripeInstance("pending");
+    let cancelled = false;
+    void getStripeClient().then((s) => {
+      if (!cancelled) setStripeInstance(s);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [step, clientSecret]);
 
   async function handleDetailsSubmit(e: FormEvent) {
     e.preventDefault();
@@ -194,22 +213,46 @@ export default function EarlyAccessForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: cleanEmail, password }),
       });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Something went wrong. Please try again.");
+      const text = await res.text();
+      let data: Record<string, unknown> = {};
+      try {
+        data = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+      } catch {
+        setError(
+          "The server returned an unexpected response. Please refresh and try again.",
+        );
         return;
       }
 
-      setClientSecret(data.clientSecret);
-      setPaymentIntentId(data.paymentIntentId);
-      setAmount(data.amount ?? 799);
-      setCurrency(data.currency ?? "usd");
+      if (!res.ok) {
+        setError(
+          typeof data.error === "string"
+            ? data.error
+            : "Something went wrong. Please try again.",
+        );
+        return;
+      }
+
+      const cs =
+        typeof data.clientSecret === "string" ? data.clientSecret : null;
+      const pi =
+        typeof data.paymentIntentId === "string" ? data.paymentIntentId : null;
+      if (!cs || !pi) {
+        setError(
+          "Checkout could not start (missing payment session). Please try again.",
+        );
+        return;
+      }
+
+      setClientSecret(cs);
+      setPaymentIntentId(pi);
+      setAmount(typeof data.amount === "number" ? data.amount : 799);
+      setCurrency(typeof data.currency === "string" ? data.currency : "usd");
       setPassword("");
       setConfirm("");
       setStep("payment");
-    } catch {
-      setError("Network error. Please try again.");
+    } catch (e) {
+      setError(networkErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -388,18 +431,33 @@ export default function EarlyAccessForm() {
               </p>
             </form>
           ) : clientSecret && elementsOptions ? (
-            <Elements stripe={stripePromise} options={elementsOptions}>
-              <PaymentStep
-                paymentIntentId={paymentIntentId!}
-                email={email}
-                amount={amount}
-                currency={currency}
-                onBack={() => {
-                  setStep("details");
-                  setClientSecret(null);
-                }}
-              />
-            </Elements>
+            stripeInstance === "pending" ? (
+              <p className="text-center text-muted text-[14px] py-10">
+                Loading secure payment form…
+              </p>
+            ) : stripeInstance === null ? (
+              <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-4 text-[13px] text-red-600 leading-relaxed">
+                Stripe.js could not load (often an ad blocker, VPN, or a bad
+                publishable key). Allow this site and{" "}
+                <span className="whitespace-nowrap">js.stripe.com</span>, then
+                refresh. If it persists, confirm{" "}
+                <code className="text-[12px]">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>{" "}
+                on your host.
+              </div>
+            ) : (
+              <Elements stripe={stripeInstance} options={elementsOptions}>
+                <PaymentStep
+                  paymentIntentId={paymentIntentId!}
+                  email={email}
+                  amount={amount}
+                  currency={currency}
+                  onBack={() => {
+                    setStep("details");
+                    setClientSecret(null);
+                  }}
+                />
+              </Elements>
+            )
           ) : null}
         </div>
 

@@ -4,7 +4,7 @@ let _stripe: Stripe | null = null;
 
 export function getStripe(): Stripe {
   if (!_stripe) {
-    const key = process.env.STRIPE_SECRET_KEY;
+    const key = process.env.STRIPE_SECRET_KEY?.trim();
     if (!key) {
       throw new Error(
         "Stripe is not configured: STRIPE_SECRET_KEY is missing. Add it to .env.local (local) or Vercel → Project Settings → Environment Variables (production), then redeploy.",
