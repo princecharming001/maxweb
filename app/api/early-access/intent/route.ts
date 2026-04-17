@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getStripe } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { buildEarlyAccessCheckoutUrl } from "@/lib/earlyAccessPaymentLink";
+
+export const dynamic = "force-dynamic";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EARLY_ACCESS_AMOUNT_CENTS = 799;
-const EARLY_ACCESS_CURRENCY = "usd";
 
+/**
+ * Saves email + bcrypt-hashed password to paid_waitlist, then returns the Stripe
+ * Payment Link URL (with client_reference_id + prefilled_email) for hosted checkout.
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -39,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     const { data: existing, error: lookupError } = await supabase
       .from("paid_waitlist")
-      .select("id, status, stripe_payment_intent_id")
+      .select("id, status")
       .eq("email", email)
       .maybeSingle();
 
@@ -58,74 +62,33 @@ export async function POST(req: NextRequest) {
     }
 
     const password_hash = await bcrypt.hash(password, 12);
-    const stripe = getStripe();
-
-    let paymentIntentId: string | null =
-      existing?.stripe_payment_intent_id ?? null;
-    let clientSecret: string | null = null;
-
-    if (paymentIntentId) {
-      try {
-        const existingIntent = await stripe.paymentIntents.retrieve(
-          paymentIntentId,
-        );
-        if (
-          existingIntent.status === "requires_payment_method" ||
-          existingIntent.status === "requires_confirmation" ||
-          existingIntent.status === "requires_action"
-        ) {
-          clientSecret = existingIntent.client_secret ?? null;
-        } else {
-          paymentIntentId = null;
-        }
-      } catch {
-        paymentIntentId = null;
-      }
-    }
-
-    if (!paymentIntentId || !clientSecret) {
-      const intent = await stripe.paymentIntents.create({
-        amount: EARLY_ACCESS_AMOUNT_CENTS,
-        currency: EARLY_ACCESS_CURRENCY,
-        automatic_payment_methods: { enabled: true },
-        receipt_email: email,
-        description: "Max — Early Access (1 month · limited launch pricing)",
-        metadata: {
-          product: "max_early_access",
-          email,
-        },
-      });
-      paymentIntentId = intent.id;
-      clientSecret = intent.client_secret ?? null;
-    }
-
-    if (!clientSecret || !paymentIntentId) {
-      throw new Error("Failed to create payment intent");
-    }
 
     const upsertPayload = {
       email,
       password_hash,
-      stripe_payment_intent_id: paymentIntentId,
-      amount_cents: EARLY_ACCESS_AMOUNT_CENTS,
-      currency: EARLY_ACCESS_CURRENCY,
+      stripe_payment_intent_id: null as string | null,
+      amount_cents: 799,
+      currency: "usd",
       status: "pending" as const,
     };
 
-    const { error: upsertError } = await supabase
+    const { data: row, error: upsertError } = await supabase
       .from("paid_waitlist")
-      .upsert(upsertPayload, { onConflict: "email" });
+      .upsert(upsertPayload, { onConflict: "email" })
+      .select("id")
+      .single();
 
     if (upsertError) {
       throw upsertError;
     }
 
-    return NextResponse.json({
-      clientSecret,
-      paymentIntentId,
-      amount: EARLY_ACCESS_AMOUNT_CENTS,
-      currency: EARLY_ACCESS_CURRENCY,
-    });
+    if (!row?.id) {
+      throw new Error("Failed to save signup");
+    }
+
+    const url = buildEarlyAccessCheckoutUrl(row.id, email);
+
+    return NextResponse.json({ url });
   } catch (err: unknown) {
     console.error("[/api/early-access/intent] error:", err);
     let message = "Failed to start checkout";

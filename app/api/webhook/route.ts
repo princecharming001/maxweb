@@ -3,14 +3,24 @@ import { getStripe } from "@/lib/stripe";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import Stripe from "stripe";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
 
   if (!sig) {
     return NextResponse.json(
       { error: "Missing stripe-signature header" },
       { status: 400 }
+    );
+  }
+
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: "STRIPE_WEBHOOK_SECRET is not configured" },
+      { status: 500 }
     );
   }
 
@@ -20,7 +30,7 @@ export async function POST(req: NextRequest) {
     event = getStripe().webhooks.constructEvent(
       body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      webhookSecret
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Webhook error";
@@ -33,7 +43,38 @@ export async function POST(req: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      console.log("Subscription created for:", session.customer_email);
+      const ref = session.client_reference_id;
+      const uuidRe =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+      if (ref && uuidRe.test(ref)) {
+        try {
+          const supabase = getSupabaseAdmin();
+          const { data: paidRow } = await supabase
+            .from("paid_waitlist")
+            .select("id")
+            .eq("id", ref)
+            .maybeSingle();
+
+          if (paidRow) {
+            const customerId =
+              typeof session.customer === "string" ? session.customer : null;
+            await supabase
+              .from("paid_waitlist")
+              .update({
+                status: "paid",
+                paid_at: new Date().toISOString(),
+                stripe_customer_id: customerId,
+              })
+              .eq("id", ref);
+            break;
+          }
+        } catch (err) {
+          console.error("paid_waitlist checkout.session.completed:", err);
+        }
+      }
+
+      console.log("checkout.session.completed:", session.customer_email);
       break;
     }
     case "customer.subscription.updated": {

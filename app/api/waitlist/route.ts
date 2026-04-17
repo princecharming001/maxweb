@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 
+export const dynamic = "force-dynamic";
+
 const PHONE_RE = /^\+\d{1,4}\d{7,15}$/;
 
 export async function POST(req: NextRequest) {

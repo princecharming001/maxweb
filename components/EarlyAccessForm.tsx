@@ -2,169 +2,16 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  Elements,
-  PaymentElement,
-  useElements,
-  useStripe,
-} from "@stripe/react-stripe-js";
-import type { Stripe, StripeElementsOptions } from "@stripe/stripe-js";
-import { getStripeClient } from "@/lib/stripeClient";
 import { networkErrorMessage } from "@/lib/networkErrorMessage";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-type Step = "details" | "payment";
-
-function formatPrice(cents: number, currency: string) {
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency.toUpperCase(),
-    }).format(cents / 100);
-  } catch {
-    return `$${(cents / 100).toFixed(2)}`;
-  }
-}
-
-function PaymentStep({
-  paymentIntentId,
-  email,
-  amount,
-  currency,
-  onBack,
-}: {
-  paymentIntentId: string;
-  email: string;
-  amount: number;
-  currency: string;
-  onBack: () => void;
-}) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  async function handleConfirm(e: FormEvent) {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setSubmitting(true);
-    setError("");
-
-    const { error: submitError } = await elements.submit();
-    if (submitError) {
-      setError(submitError.message ?? "Please check your payment details.");
-      setSubmitting(false);
-      return;
-    }
-
-    const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      redirect: "if_required",
-      confirmParams: {
-        receipt_email: email,
-        return_url: `${window.location.origin}/?early_access=success`,
-      },
-    });
-
-    if (confirmError) {
-      setError(confirmError.message ?? "Payment could not be completed.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (paymentIntent && paymentIntent.status === "succeeded") {
-      try {
-        await fetch("/api/early-access/finalize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentIntentId }),
-        });
-      } catch {
-        // The webhook is the source of truth; ignore client-side finalize errors.
-      }
-      router.push("/?early_access=success");
-      return;
-    }
-
-    setError("Payment is still processing. Please wait a moment and try again.");
-    setSubmitting(false);
-  }
-
-  return (
-    <form onSubmit={handleConfirm} className="space-y-5">
-      <div className="rounded-xl border border-border/70 bg-background/60 px-4 py-3 flex items-center justify-between">
-        <div>
-          <p className="text-[12px] uppercase tracking-wide text-muted">
-            Paying as
-          </p>
-          <p className="text-[14px] text-foreground font-medium truncate max-w-[220px]">
-            {email}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-[12px] text-muted hover:text-foreground transition-colors cursor-pointer"
-        >
-          Edit
-        </button>
-      </div>
-
-      <div className="rounded-xl border border-border/70 bg-card px-4 py-4">
-        <PaymentElement
-          options={{
-            layout: { type: "tabs", defaultCollapsed: false },
-          }}
-        />
-      </div>
-
-      {error && (
-        <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-[13px] text-red-600">
-          {error}
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={!stripe || !elements || submitting}
-        className="w-full bg-foreground text-background py-3.5 rounded-xl text-[14px] font-medium hover:bg-foreground/85 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-      >
-        {submitting ? "Processing…" : `Pay ${formatPrice(amount, currency)}`}
-      </button>
-
-      <p className="text-[11px] text-muted text-center leading-relaxed">
-        Payments are securely processed by Stripe. Your card details never touch
-        our servers. By confirming you agree to the{" "}
-        <Link href="/legal" className="underline hover:text-foreground">
-          Terms
-        </Link>
-        .
-      </p>
-    </form>
-  );
-}
-
 export default function EarlyAccessForm() {
-  const [step, setStep] = useState<Step>("details");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
-  const [amount, setAmount] = useState<number>(799);
-  const [currency, setCurrency] = useState<string>("usd");
-
-  /** Resolved Stripe.js instance for the payment step (null = failed to load). */
-  const [stripeInstance, setStripeInstance] = useState<
-    Stripe | null | "pending"
-  >("pending");
 
   useEffect(() => {
     document.body.style.backgroundColor = "var(--color-background)";
@@ -173,22 +20,7 @@ export default function EarlyAccessForm() {
     };
   }, []);
 
-  useEffect(() => {
-    if (step !== "payment" || !clientSecret) {
-      setStripeInstance("pending");
-      return;
-    }
-    setStripeInstance("pending");
-    let cancelled = false;
-    void getStripeClient().then((s) => {
-      if (!cancelled) setStripeInstance(s);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [step, clientSecret]);
-
-  async function handleDetailsSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
 
@@ -233,64 +65,19 @@ export default function EarlyAccessForm() {
         return;
       }
 
-      const cs =
-        typeof data.clientSecret === "string" ? data.clientSecret : null;
-      const pi =
-        typeof data.paymentIntentId === "string" ? data.paymentIntentId : null;
-      if (!cs || !pi) {
-        setError(
-          "Checkout could not start (missing payment session). Please try again.",
-        );
+      const url = typeof data.url === "string" ? data.url : null;
+      if (!url) {
+        setError("Checkout link missing. Please try again.");
         return;
       }
 
-      setClientSecret(cs);
-      setPaymentIntentId(pi);
-      setAmount(typeof data.amount === "number" ? data.amount : 799);
-      setCurrency(typeof data.currency === "string" ? data.currency : "usd");
-      setPassword("");
-      setConfirm("");
-      setStep("payment");
+      window.location.assign(url);
     } catch (e) {
       setError(networkErrorMessage(e));
     } finally {
       setLoading(false);
     }
   }
-
-  const elementsOptions: StripeElementsOptions | undefined = clientSecret
-    ? {
-        clientSecret,
-        appearance: {
-          theme: "stripe",
-          variables: {
-            colorPrimary: "#1d1d1f",
-            colorBackground: "#ffffff",
-            colorText: "#1d1d1f",
-            colorTextSecondary: "#86868b",
-            colorDanger: "#e11d48",
-            fontFamily:
-              "Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
-            fontSizeBase: "14px",
-            borderRadius: "12px",
-          },
-          rules: {
-            ".Input": {
-              border: "1px solid #d2d2d7",
-              boxShadow: "none",
-              padding: "12px",
-            },
-            ".Input:focus": {
-              borderColor: "#1d1d1f",
-              boxShadow: "0 0 0 3px rgba(29,29,31,0.08)",
-            },
-            ".Tab": { border: "1px solid #d2d2d7", padding: "10px 14px" },
-            ".Tab--selected": { borderColor: "#1d1d1f" },
-            ".Label": { fontWeight: "500", color: "#4b4b52" },
-          },
-        },
-      }
-    : undefined;
 
   const inputClass =
     "w-full px-4 py-3 rounded-xl border border-border/80 bg-background text-foreground text-[14px] focus:outline-none focus:ring-2 focus:ring-foreground/10 focus:border-foreground/40 transition-all placeholder:text-muted/50";
@@ -319,23 +106,11 @@ export default function EarlyAccessForm() {
               Early Access · Limited Launch Pricing
             </div>
             <h1 className="mt-4 text-[26px] font-semibold tracking-tight">
-              {step === "details" ? "Get early access" : "Confirm payment"}
+              Get early access
             </h1>
             <p className="mt-2 text-muted text-[14px] leading-relaxed">
-              {step === "details" ? (
-                <>
-                  One month of Max for{" "}
-                  <span className="text-foreground font-medium">$7.99</span>.
-                  <br />
-                  Create your account to claim your spot.
-                </>
-              ) : (
-                <>
-                  One month of Max — billed once, no auto-renewal.
-                  <br />
-                  Finish checkout to activate your account.
-                </>
-              )}
+              Create your account below, then you&apos;ll be taken to Stripe to
+              pay securely.
             </p>
           </div>
 
@@ -350,115 +125,88 @@ export default function EarlyAccessForm() {
             </div>
           </div>
 
-          {step === "details" ? (
-            <form onSubmit={handleDetailsSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="ea-email"
-                  className="block text-[13px] font-medium text-foreground/70 mb-2"
-                >
-                  Email
-                </label>
-                <input
-                  id="ea-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={inputClass}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="ea-password"
-                  className="block text-[13px] font-medium text-foreground/70 mb-2"
-                >
-                  Password
-                </label>
-                <input
-                  id="ea-password"
-                  type="password"
-                  required
-                  minLength={8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={inputClass}
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="ea-confirm"
-                  className="block text-[13px] font-medium text-foreground/70 mb-2"
-                >
-                  Confirm password
-                </label>
-                <input
-                  id="ea-confirm"
-                  type="password"
-                  required
-                  minLength={8}
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className={inputClass}
-                  placeholder="Repeat your password"
-                  autoComplete="new-password"
-                />
-              </div>
-
-              {error && (
-                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-[13px] text-red-600">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-foreground text-background py-3.5 rounded-xl text-[14px] font-medium hover:bg-foreground/85 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-1"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="ea-email"
+                className="block text-[13px] font-medium text-foreground/70 mb-2"
               >
-                {loading ? "Preparing checkout…" : "Continue to payment"}
-              </button>
+                Username (email)
+              </label>
+              <input
+                id="ea-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={inputClass}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+              <p className="mt-1.5 text-[11px] text-muted/90">
+                We use this email as your login and to pre-fill Stripe checkout.
+              </p>
+            </div>
 
-              <p className="text-[11px] text-muted text-center leading-relaxed pt-1">
-                $7.99 one-time charge for one month of early access. No
-                auto-renewal.
-              </p>
-            </form>
-          ) : clientSecret && elementsOptions ? (
-            stripeInstance === "pending" ? (
-              <p className="text-center text-muted text-[14px] py-10">
-                Loading secure payment form…
-              </p>
-            ) : stripeInstance === null ? (
-              <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-4 text-[13px] text-red-600 leading-relaxed">
-                Stripe.js could not load (often an ad blocker, VPN, or a bad
-                publishable key). Allow this site and{" "}
-                <span className="whitespace-nowrap">js.stripe.com</span>, then
-                refresh. If it persists, confirm{" "}
-                <code className="text-[12px]">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code>{" "}
-                on your host.
+            <div>
+              <label
+                htmlFor="ea-password"
+                className="block text-[13px] font-medium text-foreground/70 mb-2"
+              >
+                Password
+              </label>
+              <input
+                id="ea-password"
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputClass}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="ea-confirm"
+                className="block text-[13px] font-medium text-foreground/70 mb-2"
+              >
+                Confirm password
+              </label>
+              <input
+                id="ea-confirm"
+                type="password"
+                required
+                minLength={8}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className={inputClass}
+                placeholder="Repeat your password"
+                autoComplete="new-password"
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-[13px] text-red-600">
+                {error}
               </div>
-            ) : (
-              <Elements stripe={stripeInstance} options={elementsOptions}>
-                <PaymentStep
-                  paymentIntentId={paymentIntentId!}
-                  email={email}
-                  amount={amount}
-                  currency={currency}
-                  onBack={() => {
-                    setStep("details");
-                    setClientSecret(null);
-                  }}
-                />
-              </Elements>
-            )
-          ) : null}
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-foreground text-background py-3.5 rounded-xl text-[14px] font-medium hover:bg-foreground/85 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-1"
+            >
+              {loading ? "Saving…" : "Save account & pay on Stripe"}
+            </button>
+
+            <p className="text-[11px] text-muted text-center leading-relaxed pt-1">
+              Your password is stored hashed in our database. Payment happens on
+              Stripe&apos;s secure checkout page.
+            </p>
+          </form>
         </div>
 
         <p className="mt-7 text-center text-[13px] text-muted">

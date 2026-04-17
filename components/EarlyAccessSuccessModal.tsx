@@ -8,9 +8,17 @@ function subscribe() {
 
 function getSnapshot(): boolean {
   if (typeof window === "undefined") return false;
-  return (
-    new URL(window.location.href).searchParams.get("early_access") === "success"
-  );
+  const p = new URL(window.location.href).searchParams;
+  if (p.get("early_access") === "success") return true;
+  // Stripe return after 3DS (return_url may omit custom query on edge cases):
+  if (
+    p.get("redirect_status") === "succeeded" &&
+    Boolean(p.get("payment_intent")) &&
+    Boolean(p.get("payment_intent_client_secret"))
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function getServerSnapshot(): boolean {
