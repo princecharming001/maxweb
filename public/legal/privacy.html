@@ -11,7 +11,7 @@
   <div class="wrap">
     <header>
       <h1>Privacy policy</h1>
-      <p class="meta">Effective date: March 23, 2026 · Last updated: March 23, 2026 · App: Max (iOS/Android bundle: com.cannon.mobile)</p>
+      <p class="meta">Effective date: March 23, 2026 · Last updated: April 22, 2026 · App: Max (iOS/Android bundle: com.cannon.mobile)</p>
       <nav class="pill-nav" aria-label="Legal documents">
         <a href="index.html">Legal home</a>
         <a href="terms.html">Terms</a>
@@ -54,31 +54,36 @@
     <h2>3. Information we collect</h2>
     <p>We collect information in the categories below. The exact data depends on which features you use.</p>
 
-    <h3>3.1 You provide directly</h3>
+    <h3 id="camera-media">3.1 Camera and media</h3>
+    <p>
+      When you use camera, photo library, or microphone permissions, you may submit images, video, or audio for features such as face scans, progress tracking, or attachments. Submission is voluntary except where a feature cannot function without it.
+      How we handle in-app face scans (including photos, derived landmarks, AI coaching, storage, subprocessors, retention, and deletion) is described in <a href="#face-ai">Section 7 &ldquo;Face scans, images, and AI processing&rdquo;</a>.
+    </p>
+
+    <h3>3.2 You provide directly</h3>
     <ul>
       <li><strong>Account and profile:</strong> email address; password (stored using one-way hashing—we do not store your plain-text password); first and last name; username; optional bio; phone number where required for account or SMS features; profile and progress photos you choose to upload.</li>
       <li><strong>Community and messaging:</strong> text, images, and other content you post in channels, chat, or similar features.</li>
-      <li><strong>Camera and media:</strong> when you use camera, photo library, or microphone permissions, you may submit images, video, or audio for features such as face scans, progress tracking, or attachments. Submission is voluntary except where a feature cannot function without it.</li>
       <li><strong>Payments:</strong> when you pay through Apple, Google, or our card processor, we receive transaction-related identifiers and status from the payment provider—not your full card number on our servers.</li>
       <li><strong>Support:</strong> information you include in emails, forms, or in-app support requests.</li>
       <li><strong>Onboarding and preferences:</strong> answers or settings you provide in questionnaires (for example goals, experience level, lifestyle fields) where the product collects them.</li>
     </ul>
 
-    <h3>3.2 Automatically collected</h3>
+    <h3>3.3 Automatically collected</h3>
     <ul>
       <li><strong>Device and technical data:</strong> device type, operating system, app version, language, IP address, timestamps, crash or diagnostic logs, and security-related events.</li>
       <li><strong>Usage data:</strong> interactions with features, session information, and aggregated analytics where enabled.</li>
       <li><strong>Authentication tokens:</strong> tokens or cookies used to keep you signed in on web, where applicable.</li>
     </ul>
 
-    <h3>3.3 From third parties</h3>
+    <h3>3.4 From third parties</h3>
     <ul>
       <li><strong>App stores:</strong> Apple and Google may provide limited purchase, refund, or subscription status information according to their terms.</li>
       <li><strong>Payment processors:</strong> Stripe or similar may share payment outcome and fraud signals.</li>
       <li><strong>When you sign in through a third party</strong> (if offered): basic profile details as authorized by that provider.</li>
     </ul>
 
-    <h3>3.4 Sensitive or special categories</h3>
+    <h3>3.5 Sensitive or special categories</h3>
     <p>
       Max may process photos or wellness-related information you choose to provide. We do not use the app to provide regulated medical diagnosis or treatment.
       Do not submit information you consider highly sensitive if you are uncomfortable with processing described here and in the app’s permission prompts.
@@ -108,7 +113,7 @@
       consent where required (for example optional marketing or non-essential cookies on web); and legal obligation where applicable.
     </p>
 
-    <h2>6. How we share information and subprocessors</h2>
+    <h2 id="sharing">6. How we share information and subprocessors</h2>
     <p>
       We share personal information with service providers (“subprocessors”) who process data on our behalf under contracts that require appropriate security and use only for our instructions.
       We require that they protect personal information consistently with this policy and applicable law, as required by Apple’s guidelines for third-party data recipients.
@@ -121,9 +126,12 @@
       <li><strong>File storage:</strong> for example Amazon S3 or comparable object storage for uploads (avatars, progress photos, attachments).</li>
       <li><strong>Payments:</strong> Apple App Store / Google Play billing for in-app purchases; Stripe (or similar) for web or non-store payments where used.</li>
       <li><strong>Messaging:</strong> Twilio or similar SMS providers for verification, password reset, or notifications where enabled.</li>
-      <li><strong>AI and analysis:</strong> Google (Gemini) or other model providers for generating or processing text; separate facial or image analysis services where you use scan features that depend on an external API.</li>
+      <li><strong>AI and analysis:</strong> Google (Gemini) or other model providers for generating or processing text; for face scans, landmark extraction uses Google&rsquo;s MediaPipe Face Landmarker on our infrastructure (see <a href="#face-ai">Section 7</a>). To produce natural-language feedback about a scan, the image and/or its derived measurements may be sent to a large-language-model provider (Google Gemini; OpenAI where configured) as a per-request subprocessor under their published terms.</li>
       <li><strong>Analytics, logging, and security:</strong> tools used to monitor errors, performance, or abuse, subject to configuration and consent where required.</li>
     </ul>
+    <p>
+      <strong>Face scan data:</strong> Face images are stored as private objects in Amazon S3 under our AWS account. Derived landmark coordinates and measurement scores are stored in our application database (PostgreSQL on Supabase). Face data is not shared with advertising networks, data brokers, or analytics vendors. Further detail appears in <a href="#face-ai">Section 7</a>.
+    </p>
     <p>
       We may also share information: (a) with other users as part of community features you use; (b) if required by law or to protect rights, safety, and security;
       (c) with professional advisers under confidentiality; (d) in connection with a merger, acquisition, or asset transfer, with notice where required by law.
@@ -134,11 +142,40 @@
     </p>
 
     <h2 id="face-ai">7. Face scans, images, and AI processing</h2>
+
+    <h3 id="face-scan-7-1">7.1 What we collect and how we process it</h3>
     <p>
-      If you use features that capture or upload face or body images, those images may be processed on our servers and/or sent to subprocessors (for example an image analysis API or an AI model) to generate scores, feedback, or coaching content.
-      We use such processing only to provide the feature you invoke, subject to this policy and in-app disclosures. We do not use HealthKit or Apple health APIs unless explicitly integrated and disclosed separately.
+      We collect three still photographs of the user&rsquo;s face (front, left profile, right profile) that the user voluntarily captures during an in-app &ldquo;face scan.&rdquo;
+      From those photos we derive up to 478 non-identifying (x, y, z) facial landmark coordinates using Google&rsquo;s MediaPipe Face Landmarker (run server-side on our infrastructure) plus derived geometric measurements (symmetry, proportions, angles).
+      We do not generate, store, or use a biometric faceprint or template intended to identify an individual. We do not use Face ID, the TrueDepth API, or any Apple biometric framework.
+    </p>
+
+    <h3 id="face-scan-7-2">7.2 Planned uses</h3>
+    <p>
+      Face scan data is used exclusively to generate the user&rsquo;s own wellness, aesthetic, and coaching feedback inside Max—symmetry and proportion scores, facial-training suggestions, and AI-generated coaching content about the user&rsquo;s own scan.
+      It is not used for identification, authentication, cross-service tracking, advertising, profiling, or training third-party models.
+    </p>
+
+    <h3 id="face-scan-7-3">7.3 Third-party sharing and storage</h3>
+    <p>
+      Face images are stored as private objects in Amazon S3 under our AWS account. Derived landmark coordinates and measurement scores are stored in our application database (PostgreSQL on Supabase).
+      To produce natural-language feedback about a scan, the image and/or its derived measurements may be sent to a large-language-model provider (Google Gemini; OpenAI where configured) as a per-request subprocessor under their published terms.
+      Face data is never shared with advertising networks, data brokers, or analytics vendors.
+    </p>
+
+    <h3 id="face-scan-7-4">7.4 Retention</h3>
+    <p>
+      Face images and derived data are retained only while the user&rsquo;s account is active and the scan remains in their history. Users can delete individual scans in-app at any time, which removes the image from S3 and the record from our DB (subject to limited backup retention).
+      Deleting the Max account deletes or anonymizes all face images, landmarks, and derived scan data, subject to the same limited backup and legal-retention exceptions. See also <a href="#account-deletion">Section 9.1</a> and <a href="#retention-short">Section 8</a>.
+    </p>
+
+    <h3 id="face-scan-7-5">7.5 Where to find this policy and related sections</h3>
+    <p>
+      This Section 7 is the primary disclosure for face scans, images, and related AI processing. Related information also appears in Section 3.1 (<a href="#camera-media">Camera and media</a>), Section 6 (<a href="#sharing">How we share information and subprocessors</a>), Section 8 (<a href="#retention-short">Retention</a>), and Section 9.1 (<a href="#account-deletion">Account deletion</a>).
+      The Privacy Policy is available at the URL listed in App Store Connect and inside the app under Settings → Privacy Policy and on the subscription paywall.
     </p>
     <p>
+      We do not use HealthKit or Apple health APIs for face scans unless explicitly integrated and disclosed separately.
       Do not use the Services to obtain regulated medical measurements that the app does not support; Apple may reject apps that claim unsupported clinical measurements from device sensors alone.
     </p>
 
@@ -147,6 +184,9 @@
       We retain personal information for as long as your account is active, as needed to provide the Services, and as required by law (for example tax, fraud prevention, or dispute resolution).
       When you delete your account, we delete or anonymize personal information unless a limited exception applies (for example backups for a short period, financial records, or information we must retain to comply with law or enforce our terms).
       Community content may be removed or anonymized as described in-app (for example posts may show as deleted).
+    </p>
+    <p>
+      For face scans specifically, retention and per-scan deletion are described in <a href="#face-scan-7-4">Section 7.4</a>; account-level deletion is described in <a href="#account-deletion">Section 9.1</a>.
     </p>
 
     <h2>9. Your choices and rights</h2>
@@ -159,6 +199,11 @@
       <li>Opt out of certain analytics or targeted advertising, including via device settings (iOS App Tracking Transparency where applicable) and cookie choices on web.</li>
       <li>Lodge a complaint with a supervisory authority in your country.</li>
     </ul>
+
+    <h3 id="account-deletion">9.1 Account deletion</h3>
+    <p>
+      You can delete your Max account using in-app account deletion where available. Deleting your account deletes or anonymizes face images, facial landmarks, derived scan measurements, and related records, consistent with <a href="#face-scan-7-4">Section 7.4</a> and the general retention exceptions above (limited backup retention and legal retention where applicable).
+    </p>
     <p>
       To exercise rights, use in-app settings where available or email <a href="mailto:mog.max123@gmail.com">mog.max123@gmail.com</a>. We may verify your identity before responding.
     </p>
