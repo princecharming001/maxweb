@@ -48,6 +48,12 @@ export default function Navbar() {
             Waitlist
           </a>
           <Link
+  href="/shop"
+  className="hover:text-foreground transition-colors"
+>
+  Shop
+</Link>
+          <Link
             href="/ugc-creators"
             className="hover:text-foreground transition-colors"
           >
@@ -56,12 +62,20 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center justify-end gap-3">
-          <Link
-            href="/signup"
-            className="bg-foreground text-background text-[13px] px-5 py-1.5 rounded-full hover:bg-foreground/85 transition-colors"
-          >
-            Get Started
+  <Link
+    href="/shop"
+    className="text-[13px] px-4 py-1.5 rounded-full border border-border hover:bg-foreground/5 transition-colors"
+  >
+    Shop
+  </Link>
+
+  <Link
+    href="/signup"
+    className="bg-foreground text-background text-[13px] px-5 py-1.5 rounded-full hover:bg-foreground/85 transition-colors"
+  >
+    Get Started
           </Link>
+          
 
           <button
             onClick={() => setMenuOpen(!menuOpen)}
