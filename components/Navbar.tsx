@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const onShop = pathname.startsWith("/shop");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -41,12 +44,6 @@ export default function Navbar() {
           >
             Features
           </a>
-          <a
-            href="#waitlist"
-            className="hover:text-foreground transition-colors"
-          >
-            Waitlist
-          </a>
           <Link
   href="/shop"
   className="hover:text-foreground transition-colors"
@@ -62,20 +59,28 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center justify-end gap-3">
-  <Link
-    href="/shop"
-    className="text-[13px] px-4 py-1.5 rounded-full border border-border hover:bg-foreground/5 transition-colors"
-  >
-    Shop
-  </Link>
-
-  <Link
-    href="/signup"
-    className="bg-foreground text-background text-[13px] px-5 py-1.5 rounded-full hover:bg-foreground/85 transition-colors"
-  >
-    Get Started
-          </Link>
-          
+          <div className="hidden sm:flex items-center gap-1 rounded-full border border-border/80 bg-card/80 p-1 backdrop-blur-md">
+            <Link
+              href="/"
+              className={`text-[13px] px-4 py-1.5 rounded-full transition-colors ${
+                onShop
+                  ? "text-muted hover:text-foreground"
+                  : "bg-foreground text-background"
+              }`}
+            >
+              Home
+            </Link>
+            <Link
+              href="/shop"
+              className={`text-[13px] px-4 py-1.5 rounded-full transition-colors ${
+                onShop
+                  ? "bg-foreground text-background"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              Shop
+            </Link>
+          </div>
 
           <button
             onClick={() => setMenuOpen(!menuOpen)}
@@ -122,13 +127,6 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           >
             Features
-          </a>
-          <a
-            href="#waitlist"
-            className="block text-muted hover:text-foreground"
-            onClick={() => setMenuOpen(false)}
-          >
-            Waitlist
           </a>
           <Link
             href="/ugc-creators"

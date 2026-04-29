@@ -3,9 +3,33 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+type ShopifyClient = unknown;
+
+interface ShopifyUI {
+  createComponent: (
+    component: "product",
+    config: {
+      id: string;
+      node: HTMLElement;
+      moneyFormat: string;
+      options: Record<string, unknown>;
+    },
+  ) => void;
+}
+
+interface ShopifyBuyGlobal {
+  UI?: {
+    onReady: (client: ShopifyClient) => Promise<ShopifyUI>;
+  };
+  buildClient: (config: {
+    domain: string;
+    storefrontAccessToken: string;
+  }) => ShopifyClient;
+}
+
 declare global {
   interface Window {
-    ShopifyBuy?: any;
+    ShopifyBuy?: ShopifyBuyGlobal;
   }
 }
 
@@ -82,30 +106,34 @@ export default function ShopPage() {
             styles: {
               product: {
                 width: "100%",
-                "max-width": "520px",
-                margin: "0 auto",
-                "text-align": "center",
+                "max-width": "100%",
+                margin: "0",
+                "text-align": "left",
               },
               img: {
                 display: "block",
-                margin: "0 auto 26px auto",
-                "border-radius": "28px",
+                margin: "0 0 20px 0",
+                "border-radius": "20px",
               },
               title: {
-                "font-size": "30px",
+                "font-size": "22px",
                 "font-weight": "600",
-                "margin-bottom": "10px",
+                "margin-bottom": "8px",
+                "letter-spacing": "-0.02em",
               },
               price: {
-                "font-size": "18px",
-                "margin-bottom": "24px",
+                "font-size": "16px",
+                "margin-bottom": "16px",
+                "letter-spacing": "-0.01em",
               },
               button: {
                 "background-color": "#111111",
                 color: "#ffffff",
                 "border-radius": "999px",
-                "padding": "16px",
+                "padding": "14px",
                 width: "100%",
+                "font-size": "13px",
+                "letter-spacing": "0.02em",
               },
             },
           },
@@ -121,12 +149,14 @@ export default function ShopPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#f7f8f6] px-5 pb-24 pt-32 text-[#111]">
-      
-      {/* CENTERED NAVBAR */}
+    <main className="relative min-h-screen overflow-hidden bg-[#f6f7f5] px-5 pb-24 pt-32 text-[#111]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-[-10%] top-28 h-52 w-52 rounded-full bg-white/80 blur-3xl animate-soft-float" />
+        <div className="absolute right-[-12%] top-60 h-60 w-60 rounded-full bg-black/[0.03] blur-3xl animate-soft-float-delayed" />
+      </div>
+
       <nav className="fixed left-1/2 top-5 z-50 -translate-x-1/2">
-        <div className="flex items-center gap-2 rounded-full border border-black/5 bg-white/80 px-4 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl">
-          
+        <div className="flex items-center gap-2 rounded-full border border-black/5 bg-white/80 px-4 py-2 shadow-[0_12px_40px_rgba(0,0,0,0.06)] backdrop-blur-xl animate-fade-in">
           <Link
             href="/"
             className="rounded-full px-4 py-2 text-sm font-medium text-[#555] hover:bg-[#f2f2f2]"
@@ -144,54 +174,43 @@ export default function ShopPage() {
         </div>
       </nav>
 
-      <section className="mx-auto max-w-5xl">
-        <section className="mb-14 text-center">
-          <p className="mb-5 text-xs uppercase tracking-[0.24em] text-[#8a8d89]">
-            Max Store
-          </p>
+      <section className="relative mx-auto max-w-5xl">
+        <section className="mb-6 rounded-[28px] border border-black/5 bg-white/80 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.05)] backdrop-blur-xl animate-fade-in-up sm:p-7">
+          <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-end">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[#8d908d]">
+              Max Shop
+            </p>
+            <p className="text-[12px] text-[#7f847f] sm:text-right">Edition 01</p>
+          </div>
 
-          <h1 className="text-6xl font-semibold tracking-[-0.07em] md:text-7xl">
-            Build your best self.
+          <h1 className="mt-6 text-[clamp(2.1rem,11vw,4.8rem)] font-semibold tracking-[-0.075em] leading-[0.9]">
+            fashionmax
           </h1>
 
-          <p className="mx-auto mt-7 max-w-xl text-lg text-[#5f635f]">
-            Premium essentials made for your daily Max routine.
+          <p className="mt-5 max-w-sm text-[14px] leading-relaxed tracking-[-0.01em] text-[#676b67]">
+            merch designed to make you ascend
           </p>
         </section>
 
-        <section className="rounded-[38px] border border-black/5 bg-white p-6 shadow-[0_28px_90px_rgba(0,0,0,0.05)] md:p-10">
-          <div className="mb-10 text-center">
-            <p className="mb-3 text-xs uppercase tracking-[0.22em] text-[#9a9d99]">
-              Featured Drop
-            </p>
+        <section className="grid gap-4 animate-fade-in-up md:grid-cols-[120px_1fr]">
+          <aside className="hidden md:flex rounded-3xl border border-black/5 bg-white/70 px-4 py-6 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.04)]">
+            <div className="[writing-mode:vertical-rl] rotate-180 text-[11px] uppercase tracking-[0.28em] text-[#8f928f]">
+              Current Drop
+            </div>
+          </aside>
 
-            <h2 className="text-4xl font-semibold md:text-5xl">
-              OG Long Sleeve
-            </h2>
+          <section className="rounded-[28px] border border-black/5 bg-white/85 p-4 shadow-[0_20px_70px_rgba(0,0,0,0.05)] backdrop-blur-xl sm:p-6">
+            <div className="mb-4 flex items-center justify-between px-1">
+              <h2 className="shop-section-title">Products</h2>
+              <p className="text-[12px] tracking-[-0.01em] text-[#7f847f]">1 item</p>
+            </div>
 
-            <p className="mx-auto mt-5 max-w-xl text-base text-[#686c68]">
-              A clean everyday piece from the Max store.
-            </p>
-          </div>
-
-          <div className="mx-auto flex max-w-[720px] justify-center rounded-[34px] border border-black/5 bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.04)] md:p-10">
-            <div id={PRODUCT_NODE_ID} className="flex w-full justify-center" />
-          </div>
-
-          <div className="mx-auto mt-12 max-w-2xl text-left">
-            <p className="mb-5 text-xs uppercase tracking-[0.22em] text-[#9a9d99]">
-              Details
-            </p>
-
-            <h3 className="mb-5 text-4xl font-semibold">
-              Max your everyday fit.
-            </h3>
-
-            <p className="text-lg text-[#616561]">
-              Designed with a minimal front graphic and a relaxed everyday feel.
-              Easy to layer, easy to wear, and clean enough for any fit.
-            </p>
-          </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <article className="rounded-2xl border border-black/5 bg-white p-4 shadow-[0_10px_28px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-0.5">
+                <div id={PRODUCT_NODE_ID} className="w-full" />
+              </article>
+            </div>
+          </section>
         </section>
       </section>
     </main>
