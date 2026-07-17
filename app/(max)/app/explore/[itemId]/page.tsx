@@ -19,6 +19,11 @@ import { queryKeys } from "@/lib/max/queryClient";
 import { useMaxPaywallGate } from "@/hooks/useMaxPaywallGate";
 import { Spinner } from "@/components/max/ui";
 import {
+  getCourseForMaxx,
+  isCreatorCourse,
+  type CourseModule,
+} from "@/lib/max/courses/courseContent";
+import {
   Accordion,
   fmtK,
   habitMetaLine,
@@ -39,26 +44,16 @@ import {
 } from "@/components/max/explore/detail-parts";
 
 const GOLD = "#2C6BED";
-/**
- * Creator-authored courses that open into the reader ("Add to schedule" CTA,
- * unlocked lessons, no "Free preview" badge). Mirrors the mobile registry
- * `isCreatorCourse(getCourseForMaxx(id))` — currently only Clay's coloringmax.
- */
-const CREATOR_COURSE_IDS = new Set(["coloringmax"]);
 
-/** Brief, looksmax-native description of what this max actually is (verbatim). */
-const LOOKSMAX_BLURB: Record<string, string> = {
-  skinmax:
-    "Skin is your #1 halo — clear, even, glassy skin lifts how your whole face reads. Skinmax repairs your barrier, kills texture, redness and marks, and dials in that lit-from-within glow.",
-  hairmax:
-    "Hair frames the entire face — one of the highest-impact halos there is. Hairmax works your density, hairline and scalp health so you keep, and grow, a thick, frame-defining mane.",
-  fitmax:
-    "Body fat hides your bone structure; leanness reveals it. Fitmax leans you out and builds the right muscle so your jaw, cheekbones and frame come forward and mog.",
-  bonemax:
-    "Bone structure sets your ceiling. Bonemax trains your jaw, masseter, neck and posture — mewing and tension work — to sharpen your profile and harden your frame.",
-  heightmax:
-    "Height and posture carry presence. Heightmax is decompression, posture and frame work to decompress your spine, stand taller and own more space.",
-};
+/** Curriculum rows straight from the bundled course — same data the reader uses. */
+function curriculumFromCourse(
+  course: CourseModule,
+): { title: string; lessons: string[] }[] {
+  return course.chapters.map((ch) => ({
+    title: ch.title,
+    lessons: ch.sections.map((s) => s.title),
+  }));
+}
 
 function BackChip() {
   return (
@@ -114,7 +109,11 @@ export default function ItemDetailPage({
   function afterEntered(isCourse: boolean) {
     qc.invalidateQueries({ queryKey: queryKeys.marketplace });
     qc.invalidateQueries({ queryKey: queryKeys.marketplaceItem(itemId) });
-    // Native max → coach; course → today (schedule). Mirrors goToChat/goToSchedule.
+    // Has a bundled course → open the reader. Else native max → coach, course → today.
+    if (getCourseForMaxx(itemId)) {
+      router.push(`/app/explore/${itemId}/read`);
+      return;
+    }
     router.push(isCourse ? "/app/today" : "/app/coach");
   }
 
@@ -122,12 +121,16 @@ export default function ItemDetailPage({
     if (!item || busy) return;
     const creatorMaxx = !!item.creator_maxx;
     const isCourse = !item.native;
+    // Bundled course → the "Open" CTA opens the reader instead of /app/today.
+    const readHref = getCourseForMaxx(item.id)
+      ? `/app/explore/${item.id}/read`
+      : null;
 
     // ── Creator maxx: its own state machine (entry is subscription-gated). ──
     if (creatorMaxx) {
-      // Already in → open the member home (no web Studio route → today).
+      // Already in → open the reader if there's a course, else the member home.
       if (item.entered) {
-        router.push("/app/today");
+        router.push(readHref ?? "/app/today");
         return;
       }
       if (gate("start_plan")) return;
@@ -150,9 +153,9 @@ export default function ItemDetailPage({
 
     // ── Native max / course ────────────────────────────────────────────────
     if (!item.entered && gate("start_plan")) return;
-    // Already in → open the max (no web reader → today).
+    // Already in → open the reader if there's a bundled course, else the max.
     if (item.entered) {
-      router.push("/app/today");
+      router.push(readHref ?? "/app/today");
       return;
     }
     try {
@@ -202,7 +205,16 @@ export default function ItemDetailPage({
   const isCourse = !item.native;
   const isOwner = false; // web has no getCreatorByMaxx → non-owner ("Open").
   const base = item.color || GOLD;
-  const readerCourseId = CREATOR_COURSE_IDS.has(item.id) ? item.id : null;
+  // Bundled course for this item (same registry the iOS app uses). Drives the
+  // reader link, the curriculum rows, and the creator-course CTA label.
+  const courseDef = getCourseForMaxx(item.id);
+  const creatorCourse = isCreatorCourse(courseDef);
+  const hasReader = !!courseDef;
+  const readHref = `/app/explore/${item.id}/read`;
+  // Prefer the ported course chapters for the curriculum; else the API's.
+  const curriculum = courseDef
+    ? curriculumFromCourse(courseDef)
+    : (d?.curriculum ?? []);
 
   const art =
     creatorMaxx && item.image_url
@@ -217,8 +229,8 @@ export default function ItemDetailPage({
     (creatorMaxx ? "Creator max" : isCourse ? "Course" : "Max")
   ).toUpperCase();
   const maxBlurb =
-    LOOKSMAX_BLURB[item.id.toLowerCase()] ||
     d?.long_description ||
+    courseDef?.subtitle ||
     item.tagline ||
     "";
   const habits = (d?.habits ?? []) as ExHabit[];
@@ -233,7 +245,7 @@ export default function ItemDetailPage({
         : "Start free"
     : item.entered
       ? "Open"
-      : readerCourseId
+      : creatorCourse
         ? "Add to schedule"
         : isCourse
           ? "Enroll"
@@ -416,12 +428,12 @@ export default function ItemDetailPage({
         </Section>
       ) : null}
 
-      {isCourse && !creatorMaxx && d?.curriculum?.length ? (
+      {isCourse && !creatorMaxx && curriculum.length ? (
         <Section label="What's inside">
-          {readerCourseId ? (
+          {hasReader ? (
             <button
               type="button"
-              onClick={() => router.push("/app/today")}
+              onClick={() => router.push(readHref)}
               className="bg-mx-card mb-0.5 mt-[14px] flex w-full items-center justify-center gap-2 rounded-[14px] border py-[13px]"
               style={{ borderColor: base }}
             >
@@ -431,13 +443,13 @@ export default function ItemDetailPage({
             </button>
           ) : null}
           <div className="border-mx-border border-t">
-            {d.curriculum.map((w, i) => {
-              const unlocked = !!readerCourseId || i === 0;
+            {curriculum.map((w, i) => {
+              const unlocked = hasReader || i === 0;
               return (
                 <Accordion
                   key={i}
                   title={w.title}
-                  badge={!readerCourseId && i === 0 ? "Free preview" : undefined}
+                  badge={!hasReader && i === 0 ? "Free preview" : undefined}
                   open={openWeek === i}
                   onToggle={() => setOpenWeek(openWeek === i ? -1 : i)}
                 >
