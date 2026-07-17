@@ -124,9 +124,29 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* ── Mobile bottom tabs ──────────────────────────────────────── */}
-      <nav className="border-mx-border bg-mx-card/95 fixed inset-x-0 bottom-0 z-30 flex border-t backdrop-blur lg:hidden">
+      {/* Center "Scan" is an elevated glass disc that floats above the bar,
+          mirroring the iOS ScanCenterButton (no label, soft float shadow). */}
+      <nav className="border-mx-border bg-mx-card/95 fixed inset-x-0 bottom-0 z-30 flex items-end border-t pb-[calc(env(safe-area-inset-bottom)+2px)] backdrop-blur lg:hidden">
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
+          if (item.icon === "scan") {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-label="Scan"
+                className="flex flex-1 items-center justify-center"
+              >
+                <span
+                  className={`-mt-7 flex size-[50px] items-center justify-center rounded-full border border-white/95 shadow-[0_8px_16px_rgba(28,30,38,0.3)] backdrop-blur ${
+                    active ? "bg-mx-accent text-white" : "bg-white/75 text-mx-ink"
+                  }`}
+                >
+                  <Icon name="scan" className="size-[22px]" />
+                </span>
+              </Link>
+            );
+          }
           return (
             <Link
               key={item.href}
