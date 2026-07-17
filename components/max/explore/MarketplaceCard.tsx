@@ -4,16 +4,18 @@ import Link from "next/link";
 import type { MarketplaceItem } from "@/lib/max/api";
 import api from "@/lib/max/api";
 
+/** Grid card — mirrors the iOS marketplace GridCard: image on top, serif title,
+ *  price on its own line, creator + rating footer. */
 export default function MarketplaceCard({ item }: { item: MarketplaceItem }) {
   const img = api.resolveAttachmentUrl(item.image_url);
   return (
     <Link
       href={`/app/explore/${item.id}`}
-      className="rounded-mx-lg border border-mx-border bg-mx-card shadow-mx-sm hover:shadow-mx-md group overflow-hidden transition"
+      className="rounded-mx-lg border border-mx-border bg-mx-card shadow-mx-sm hover:shadow-mx-md group flex flex-col overflow-hidden transition"
     >
       <div
-        className="relative aspect-[16/10] overflow-hidden"
-        style={{ background: item.color || "var(--mx-surface)" }}
+        className="relative aspect-[4/5] overflow-hidden"
+        style={{ background: item.color || "var(--color-mx-surface)" }}
       >
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -23,35 +25,30 @@ export default function MarketplaceCard({ item }: { item: MarketplaceItem }) {
             className="size-full object-cover transition group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="flex size-full items-center justify-center text-[40px]">
-            {item.icon || "✦"}
+          <div className="font-mx-serif text-mx-ink/30 flex size-full items-center justify-center text-[52px]">
+            {(item.title || "M")[0]}
           </div>
         )}
         {item.entered ? (
-          <span className="bg-mx-success/90 absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-medium text-white">
-            Entered
+          <span className="bg-mx-success/90 absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[10px] font-medium text-white">
+            Active
           </span>
         ) : null}
       </div>
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="text-mx-ink text-[15px] font-semibold leading-tight">
-            {item.title}
-          </div>
-          <span className="text-mx-ink-2 shrink-0 text-[13px] font-medium">
-            {item.price_label}
-          </span>
+
+      <div className="flex flex-1 flex-col p-3">
+        <div className="font-mx-serif text-mx-ink text-[17px] leading-tight">
+          {item.title}
         </div>
-        <p className="text-mx-muted mt-1 line-clamp-2 text-[13px]">
-          {item.tagline}
-        </p>
-        <div className="text-mx-muted mt-3 flex items-center gap-2 text-[12px]">
+        <div className="text-mx-muted mt-0.5 text-[12.5px] leading-snug">
+          {item.price_label || item.tagline}
+        </div>
+
+        <div className="text-mx-muted mt-auto flex items-center gap-1.5 pt-2.5 text-[12px]">
           <span className="truncate">{item.creator?.name}</span>
-          {item.creator?.verified ? (
-            <span className="text-mx-accent">✓</span>
-          ) : null}
+          {item.creator?.verified ? <span className="text-mx-accent">✓</span> : null}
           {item.rating != null ? (
-            <span className="ml-auto">★ {item.rating.toFixed(1)}</span>
+            <span className="ml-auto shrink-0">★ {item.rating.toFixed(1)}</span>
           ) : null}
         </div>
       </div>

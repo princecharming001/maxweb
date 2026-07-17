@@ -25,7 +25,7 @@ function SubscribeInner() {
   const params = useSearchParams();
   const inFunnel = params.get("funnel") === "1";
   const afterPaywall = inFunnel ? "/start/schedule" : "/app/today";
-  const { chooseFreeTier, refreshUser } = useMaxAuth();
+  const { refreshUser } = useMaxAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -74,20 +74,26 @@ function SubscribeInner() {
     setCodeNote(null);
     try {
       const res = await api.redeemReferral(code.trim(), "web");
-      if (res.granted_entitlement) {
+      // Full comp → server granted access; advance the funnel.
+      if (res.free || res.result === "comped" || res.granted_entitlement) {
         await refreshUser();
         router.replace(afterPaywall);
         return;
       }
-      setCodeNote(res.message || "Code applied.");
+      // Discount → carry the promo code into checkout.
+      if (res.stripe_promotion_code) {
+        try {
+          sessionStorage.setItem("max_promo_code", res.stripe_promotion_code);
+        } catch {
+          /* ignore */
+        }
+        setCodeNote("Code applied — your discount is ready at checkout.");
+        return;
+      }
+      setCodeNote(res.message || "That code isn't valid.");
     } catch {
       setCodeNote("That code didn't work.");
     }
-  }
-
-  function goFree() {
-    chooseFreeTier();
-    router.replace(afterPaywall);
   }
 
   return (
@@ -203,13 +209,6 @@ function SubscribeInner() {
             </button>
           </div>
           {codeNote ? <p className="mt-2 text-[13px] text-white/60">{codeNote}</p> : null}
-        </div>
-
-        {/* Free plan escape (web funnel) */}
-        <div className="mt-7 text-center">
-          <button onClick={goFree} className="text-[14px] text-white/55 underline hover:text-white/80">
-            Continue with the free plan
-          </button>
         </div>
 
         {/* Legal */}

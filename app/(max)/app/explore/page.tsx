@@ -68,7 +68,7 @@ function ExploreInner() {
       ) : items.length === 0 ? (
         <p className="text-mx-muted mt-10 text-[14px]">Nothing here yet.</p>
       ) : (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-2 gap-4">
           {items.map((item) => (
             <MarketplaceCard key={item.id} item={item} />
           ))}
