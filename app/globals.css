@@ -28,6 +28,13 @@
 }
 
 @theme inline {
+  /* Neutral tokens used by the ported legal + support pages. */
+  --color-background: #fafafa;
+  --color-foreground: #1d1d1f;
+  --color-muted: #86868b;
+  --color-card: #ffffff;
+  --color-border: #d2d2d7;
+
   --color-paper: hsl(var(--paper));
   --color-paper-2: hsl(var(--paper-2));
   --color-paper-edge: hsl(var(--paper-edge));
