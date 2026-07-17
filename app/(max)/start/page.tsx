@@ -26,17 +26,13 @@ export default function StartPage() {
 
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center text-center">
-      <div className="font-mx-serif text-mx-ink text-[44px] leading-none">
-        Max
-      </div>
-      <h1 className="font-mx-serif text-mx-ink mt-8 text-[32px] leading-tight">
-        Look your best,
+      <h1 className="font-mx-serif text-mx-ink text-[46px] leading-[1.04] tracking-[-1.5px]">
+        Your looks,
         <br />
-        one day at a time.
+        maxed.
       </h1>
-      <p className="text-mx-muted mt-4 max-w-[380px] text-[15px] leading-relaxed">
-        Answer a few questions and Max builds you a daily plan, a coach, and a
-        way to track your progress.
+      <p className="mt-4 max-w-[340px] text-[15px] leading-relaxed text-[#6b6b6b]">
+        Scan your face. Get your plan. Glow up.
       </p>
 
       <div className="mt-9 w-full max-w-[320px]">

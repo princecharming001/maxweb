@@ -10,12 +10,23 @@ import {
   saveAnswers,
   type OnboardingAnswers,
 } from "@/lib/max/onboarding";
+import { ContinueButton, FunnelHeader, Icon, StepHead } from "../_ui";
 
 const AGE_TO_YEARS: Record<string, number> = {
   under_18: 16,
   "18_24": 21,
   "25_34": 30,
   "35_plus": 40,
+};
+
+// Per-max leading glyph on the goals tiles (iOS shows the glossy maxx thumb;
+// the web port uses the matching line icon).
+const GOAL_ICON: Record<string, string> = {
+  skinmax: "sparkles",
+  fitmax: "barbell",
+  hairmax: "cut",
+  heightmax: "resize",
+  bonemax: "body",
 };
 
 export default function IntroQuizPage() {
@@ -116,31 +127,18 @@ export default function IntroQuizPage() {
     else router.replace("/start/scan");
   }
 
+  const showContinue =
+    step.kind === "ranked" ||
+    (step.kind === "motivation" && value === "other");
+
   return (
     <div className="flex min-h-[86vh] flex-col">
-      {/* Progress */}
-      <div className="flex items-center gap-3 pt-2">
-        <button onClick={goBack} className="text-mx-muted hover:text-mx-ink text-[14px]">
-          Back
-        </button>
-        <div className="bg-mx-surface h-1.5 flex-1 overflow-hidden rounded-full">
-          <div
-            className="bg-mx-ink h-full rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <span className="text-mx-muted text-[12px]">
-          {idx + 1}/{INTRO_STEPS.length}
-        </span>
-      </div>
+      <FunnelHeader progress={progress} showBack onBack={goBack} />
 
-      <div className="mt-12 flex-1">
-        <h1 className="font-mx-serif text-mx-ink text-center text-[30px] leading-[1.15] whitespace-pre-line">
-          {step.title}
-        </h1>
-        <p className="text-mx-muted mt-2.5 text-center text-[14px]">{step.sub}</p>
+      <div className="mt-12 flex flex-1 flex-col justify-center">
+        <StepHead title={step.title} sub={step.sub} />
 
-        <div className="mx-auto mt-8 max-w-[420px] space-y-2.5">
+        <div className="mt-8 space-y-2.5">
           {step.kind === "ranked"
             ? step.options.map((o) => {
                 const arr = Array.isArray(value) ? (value as string[]) : [];
@@ -150,22 +148,29 @@ export default function IntroQuizPage() {
                   <button
                     key={o.id}
                     onClick={() => toggleGoal(o.id)}
-                    className={`flex w-full items-center gap-3 rounded-mx-lg border px-4 py-3.5 text-left transition ${
-                      active
-                        ? "border-mx-ink bg-mx-ink/[0.03]"
-                        : "border-mx-border hover:border-mx-ink/25"
+                    className={`flex min-h-[66px] w-full items-center gap-3.5 rounded-mx-xl px-4 py-[15px] text-left shadow-mx-md transition ${
+                      active ? "bg-mx-ink" : "bg-white"
                     }`}
                   >
-                    <div className="flex-1">
-                      <div className="text-mx-ink text-[16px] font-medium">
+                    <span className="grid size-[38px] shrink-0 place-items-center rounded-full bg-mx-surface text-mx-ink">
+                      <Icon name={GOAL_ICON[o.id] ?? "sparkles"} size={19} />
+                    </span>
+                    <span className="flex-1">
+                      <span
+                        className={`block text-[16px] font-semibold ${active ? "text-white" : "text-mx-ink"}`}
+                      >
                         {o.label}
-                      </div>
+                      </span>
                       {o.sub ? (
-                        <div className="text-mx-muted text-[13px]">{o.sub}</div>
+                        <span
+                          className={`block text-[12.5px] ${active ? "text-white/60" : "text-mx-muted"}`}
+                        >
+                          {o.sub}
+                        </span>
                       ) : null}
-                    </div>
+                    </span>
                     {active ? (
-                      <span className="bg-mx-ink flex size-6 items-center justify-center rounded-full text-[12px] font-semibold text-white">
+                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white text-[12px] font-semibold text-mx-ink">
                         {rank + 1}
                       </span>
                     ) : null}
@@ -174,6 +179,7 @@ export default function IntroQuizPage() {
               })
             : step.options.map((o) => {
                 const active = value === o.id;
+                const hasSub = !!o.sub;
                 const onClick =
                   step.kind === "motivation"
                     ? () => pickMotivation(o.id)
@@ -182,18 +188,24 @@ export default function IntroQuizPage() {
                   <button
                     key={o.id}
                     onClick={onClick}
-                    className={`w-full rounded-mx-lg border px-4 py-3.5 text-center transition ${
-                      active
-                        ? "border-mx-ink bg-mx-ink/[0.03]"
-                        : "border-mx-border hover:border-mx-ink/25"
-                    }`}
+                    className={`flex min-h-[66px] w-full items-center rounded-mx-xl px-4 py-[15px] shadow-mx-md transition ${
+                      hasSub ? "text-left" : "justify-center text-center"
+                    } ${active ? "bg-mx-ink" : "bg-white"}`}
                   >
-                    <div className="text-mx-ink text-[16px] font-medium">
-                      {o.label}
-                    </div>
-                    {o.sub ? (
-                      <div className="text-mx-muted text-[13px]">{o.sub}</div>
-                    ) : null}
+                    <span className={hasSub ? "flex-1" : ""}>
+                      <span
+                        className={`block text-[16px] font-semibold ${active ? "text-white" : "text-mx-ink"}`}
+                      >
+                        {o.label}
+                      </span>
+                      {o.sub ? (
+                        <span
+                          className={`block text-[12.5px] ${active ? "text-white/60" : "text-mx-muted"}`}
+                        >
+                          {o.sub}
+                        </span>
+                      ) : null}
+                    </span>
                   </button>
                 );
               })}
@@ -206,25 +218,25 @@ export default function IntroQuizPage() {
               maxLength={140}
               autoFocus
               rows={2}
-              className="bg-mx-surface-light text-mx-ink placeholder:text-mx-muted focus:border-mx-accent w-full resize-none rounded-mx-md border border-mx-border px-3.5 py-2.5 text-[15px] outline-none"
+              className="min-h-[66px] w-full resize-none rounded-mx-xl bg-white px-4 py-[15px] text-[16px] text-mx-ink shadow-mx-md outline-none placeholder:text-mx-muted"
             />
           ) : null}
         </div>
       </div>
 
-      {/* Continue — shown for ranked/other (single steps auto-advance) */}
-      {(step.kind === "ranked" ||
-        (step.kind === "motivation" && value === "other")) && (
-        <div className="mx-auto mt-6 w-full max-w-[420px]">
-          <button
+      {/* Continue — shown for ranked/other; single steps auto-advance on tap. */}
+      <div className="pt-6">
+        {showContinue ? (
+          <ContinueButton
+            label="Continue"
             onClick={goNext}
-            disabled={!answered || saving}
-            className="bg-mx-ink h-12 w-full rounded-mx-md text-[15px] font-medium text-white disabled:opacity-40"
-          >
-            {saving ? "…" : "Continue"}
-          </button>
-        </div>
-      )}
+            disabled={!answered}
+            loading={saving}
+          />
+        ) : (
+          <div className="h-14" />
+        )}
+      </div>
     </div>
   );
 }

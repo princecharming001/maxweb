@@ -58,18 +58,17 @@ export default function StartScanPage() {
 
   return (
     <div className="flex min-h-[86vh] flex-col items-center justify-center text-center">
-      <div className="mx-label text-mx-accent">Totally optional</div>
+      <div className="mx-label text-mx-ink">Totally optional</div>
       <h1 className="font-mx-serif text-mx-ink mt-4 text-[30px] leading-[1.15] whitespace-pre-line">
         {"A face scan tunes\nyour plan"}
       </h1>
-      <p className="text-mx-muted mt-3 max-w-[360px] text-[15px] leading-relaxed">
-        Three quick photos and Max reads your features — a rating, an appeal
-        score, and where you can go — then points your plan at the highest-leverage
-        changes. Skip it and you can scan anytime.
+      <p className="max-w-[360px] mt-3 text-[15px] leading-relaxed text-[#6b6b6b]">
+        It rates where you are today and sharpens the skin and jaw parts of your
+        routine. Skip it and your plan still works.
       </p>
       <div className="mt-8 w-full max-w-[320px] space-y-3">
-        <Button full size="lg" variant="accent" onClick={() => setMode("capture")}>
-          Scan my face
+        <Button full size="lg" onClick={() => setMode("capture")}>
+          Scan now
         </Button>
         <button onClick={skip} className="text-mx-muted w-full text-[14px]">
           Skip for now

@@ -12,6 +12,25 @@ import {
   loadAnswers,
   saveAnswers,
 } from "@/lib/max/onboarding";
+import { ContinueButton, FunnelHeader, Icon, StepHead, Toggle } from "../_ui";
+
+// Leading glyphs (iOS Cal-AI icon per choice / recap row).
+const WEEKEND_ICON: Record<string, string> = { sleep_in: "bed", same: "repeat" };
+const SHOWER_ICON: Record<string, string> = {
+  morning: "sun",
+  night: "moon",
+  both: "water",
+};
+const RECAP_ICON: Record<string, string> = {
+  Wake: "sun",
+  "Get ready": "water",
+  Work: "briefcase",
+  Workout: "barbell",
+  Breakfast: "cafe",
+  Lunch: "restaurant",
+  Dinner: "wine",
+  "Wind down": "moon",
+};
 
 function fmt12(hhmm: string): string {
   const m = hhmm.match(/^(\d{1,2}):(\d{2})/);
@@ -187,27 +206,16 @@ export default function SchedulePage() {
     recap: { title: "Here's\nyour day", sub: "Max fits your routines into the gaps. You can drag any of this later in Plan." },
   };
 
+  const isRecap = step === "recap";
+
   return (
     <div className="flex min-h-[86vh] flex-col">
-      <div className="flex items-center gap-3 pt-2">
-        <button onClick={back} className="text-mx-muted hover:text-mx-ink text-[14px]">
-          Back
-        </button>
-        <div className="bg-mx-surface h-1.5 flex-1 overflow-hidden rounded-full">
-          <div className="bg-mx-ink h-full rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
-        </div>
-        <span className="text-mx-muted text-[12px]">
-          {idx + 1}/{steps.length}
-        </span>
-      </div>
+      <FunnelHeader progress={progress} showBack onBack={back} />
 
-      <div className="mt-12 flex-1">
-        <h1 className="font-mx-serif text-mx-ink text-center text-[30px] leading-[1.15] whitespace-pre-line">
-          {META[step].title}
-        </h1>
-        <p className="text-mx-muted mt-2.5 text-center text-[14px]">{META[step].sub}</p>
+      <div className="mt-12 flex flex-1 flex-col justify-center">
+        <StepHead title={META[step].title} sub={META[step].sub} />
 
-        <div className="mx-auto mt-8 max-w-[420px]">
+        <div className="mt-8">
           {step === "day" && (
             <Shape>
               <TimeRow label="Wake around" value={s.wake} onChange={(v) => set("wake", v)} />
@@ -220,12 +228,16 @@ export default function SchedulePage() {
             <div>
               <button
                 onClick={() => set("works", !s.works)}
-                className={`flex w-full items-center gap-3 rounded-mx-md border px-4 py-3.5 ${s.works ? "border-mx-ink bg-mx-ink/[0.03]" : "border-mx-border"}`}
+                className={`flex w-full items-center gap-2.5 rounded-mx-xl px-[18px] py-4 shadow-mx-md transition ${s.works ? "bg-mx-ink" : "bg-white"}`}
               >
-                <span className={`flex size-5 items-center justify-center rounded-full border ${s.works ? "border-mx-ink bg-mx-ink text-white" : "border-mx-muted"}`}>
-                  {s.works ? "✓" : ""}
+                <Icon
+                  name={s.works ? "check-circle" : "circle"}
+                  size={18}
+                  className={s.works ? "text-white" : "text-mx-muted"}
+                />
+                <span className={`text-[15px] font-semibold ${s.works ? "text-white" : "text-mx-ink"}`}>
+                  I have set weekday hours
                 </span>
-                <span className="text-mx-ink text-[15px]">I have set weekday hours</span>
               </button>
               {s.works && (
                 <Shape className="mt-3">
@@ -238,24 +250,41 @@ export default function SchedulePage() {
 
           {step === "where" && (
             <div>
-              <div className="grid grid-cols-3 gap-2">
-                {WORK_LOCATIONS.map((l) => (
-                  <button
-                    key={l.id}
-                    onClick={() => set("workLocation", l.id)}
-                    className={`rounded-mx-md border py-2.5 text-[14px] ${s.workLocation === l.id ? "border-mx-ink bg-mx-ink/[0.03] text-mx-ink font-medium" : "border-mx-border text-mx-ink-2"}`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
+              <div className="flex gap-1.5 rounded-mx-lg bg-white p-1.5 shadow-mx-md">
+                {WORK_LOCATIONS.map((l) => {
+                  const active = s.workLocation === l.id;
+                  return (
+                    <button
+                      key={l.id}
+                      onClick={() => set("workLocation", l.id)}
+                      className={`flex-1 rounded-mx-md py-3 text-[14px] transition ${active ? "bg-mx-ink font-medium text-white" : "text-[#6b6b6b]"}`}
+                    >
+                      {l.label}
+                    </button>
+                  );
+                })}
               </div>
               {s.workLocation !== "home" && (
                 <div className="mt-6">
-                  <div className="mb-2 flex justify-between text-[13px]">
+                  <div className="mb-1.5 flex items-center justify-between">
                     <span className="mx-label">Commute each way</span>
-                    <span className="text-mx-ink">{s.commute >= 60 ? "60+ min" : `${s.commute} min`}</span>
+                    <span className="text-mx-ink text-[15px] font-semibold">
+                      {s.commute >= 60 ? "60+ min" : `${s.commute} min`}
+                    </span>
                   </div>
-                  <input type="range" min={15} max={60} step={5} value={s.commute} onChange={(e) => set("commute", Number(e.target.value))} className="w-full" />
+                  <input
+                    type="range"
+                    min={15}
+                    max={60}
+                    step={5}
+                    value={s.commute}
+                    onChange={(e) => set("commute", Number(e.target.value))}
+                    className="w-full accent-mx-ink"
+                  />
+                  <div className="mt-2 flex justify-between text-[11px] text-mx-muted">
+                    <span>15 min</span>
+                    <span>60+ min</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -268,7 +297,7 @@ export default function SchedulePage() {
                 <MealRow label="Lunch" value={s.lunch} skipped={s.skipLunch} onChange={(v) => set("lunch", v)} onToggle={() => set("skipLunch", !s.skipLunch)} />
                 <MealRow label="Dinner" value={s.dinner} skipped={s.skipDinner} onChange={(v) => set("dinner", v)} onToggle={() => set("skipDinner", !s.skipDinner)} last />
               </Shape>
-              <p className="text-mx-muted mt-3 text-[13px]">
+              <p className="mt-3.5 text-center text-[13px] leading-[18px] text-mx-muted">
                 Toggle off any meal you don&apos;t eat — that frees the time for your routines.
               </p>
             </div>
@@ -282,70 +311,106 @@ export default function SchedulePage() {
 
           {step === "weekends" &&
             WEEKENDS.map((w) => (
-              <button
+              <OptionCard
                 key={w.id}
+                icon={WEEKEND_ICON[w.id]}
+                label={w.label}
+                active={s.weekend === w.id}
                 onClick={() => {
                   set("weekend", w.id);
                   setTimeout(next, 240);
                 }}
-                className={`mb-2.5 w-full rounded-mx-lg border px-4 py-3.5 text-center text-[16px] ${s.weekend === w.id ? "border-mx-ink bg-mx-ink/[0.03] font-medium" : "border-mx-border"}`}
-              >
-                {w.label}
-              </button>
+              />
             ))}
 
           {step === "shower" &&
             SHOWER_TIMES.map((w) => (
-              <button
+              <OptionCard
                 key={w.id}
+                icon={SHOWER_ICON[w.id]}
+                label={w.label}
+                active={s.shower === w.id}
                 onClick={() => {
                   set("shower", w.id);
                   setTimeout(next, 240);
                 }}
-                className={`mb-2.5 w-full rounded-mx-lg border px-4 py-3.5 text-center text-[16px] ${s.shower === w.id ? "border-mx-ink bg-mx-ink/[0.03] font-medium" : "border-mx-border"}`}
-              >
-                {w.label}
-              </button>
+              />
             ))}
 
           {step === "recap" && (
-            <div className="overflow-hidden rounded-mx-lg border border-mx-border">
-              {recap.map(([label, val], i) => (
-                <div
-                  key={label}
-                  className={`flex items-center justify-between px-4 py-3 ${i > 0 ? "border-mx-border border-t" : ""}`}
-                >
-                  <span className="text-mx-ink text-[14px]">{label}</span>
-                  <span className="text-mx-muted text-[14px] tabular-nums">{val}</span>
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="overflow-hidden rounded-mx-xl bg-white shadow-mx-md">
+                {recap.map(([label, val], i) => (
+                  <div
+                    key={label}
+                    className={`flex items-center gap-3.5 px-[18px] py-[15px] ${i > 0 ? "border-t border-mx-border" : ""}`}
+                  >
+                    <span className="w-6 shrink-0 text-mx-muted">
+                      <Icon name={RECAP_ICON[label] ?? "sun"} size={17} />
+                    </span>
+                    <span className="flex-1 text-[15.5px] text-[#6b6b6b]">{label}</span>
+                    <span className="text-[15.5px] font-medium text-mx-ink tabular-nums">{val}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mx-auto mt-4 max-w-[320px] text-center text-[11px] leading-[15px] text-mx-muted">
+                General wellness only — not medical advice. Follow routines at your own risk.
+              </p>
+            </>
           )}
         </div>
       </div>
 
-      {step !== "weekends" && step !== "shower" && (
-        <div className="mx-auto mt-6 w-full max-w-[420px]">
-          <button
+      <div className="pt-6">
+        {step !== "weekends" && step !== "shower" ? (
+          <ContinueButton
+            label={isRecap ? "Build my day" : "Continue"}
             onClick={next}
-            disabled={saving}
-            className="bg-mx-ink h-12 w-full rounded-mx-md text-[15px] font-medium text-white disabled:opacity-50"
-          >
-            {step === "recap" ? (saving ? "Finishing…" : "Start using Max") : "Continue"}
-          </button>
-        </div>
-      )}
+            loading={saving}
+          />
+        ) : (
+          <div className="h-14" />
+        )}
+      </div>
     </div>
   );
 }
 
 function Shape({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-mx-surface-light rounded-mx-lg border border-mx-border overflow-hidden ${className}`}>
+    <div className={`overflow-hidden rounded-mx-xl bg-white px-[18px] shadow-mx-md ${className}`}>
       {children}
     </div>
   );
 }
+
+function OptionCard({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`mb-2.5 flex min-h-[66px] w-full items-center gap-3.5 rounded-mx-xl px-4 py-[15px] text-left shadow-mx-md transition ${active ? "bg-mx-ink" : "bg-white"}`}
+    >
+      <span className="grid size-[38px] shrink-0 place-items-center rounded-full bg-mx-surface text-mx-ink">
+        <Icon name={icon} size={19} />
+      </span>
+      <span className={`flex-1 text-[16px] font-semibold ${active ? "text-white" : "text-mx-ink"}`}>
+        {label}
+      </span>
+      {active ? <Icon name="check-circle" size={22} className="text-white" /> : null}
+    </button>
+  );
+}
+
 function TimeRow({
   label,
   caption,
@@ -360,20 +425,21 @@ function TimeRow({
   last?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between px-4 py-3.5 ${last ? "" : "border-mx-border border-b"}`}>
+    <div className={`flex items-center justify-between py-3.5 ${last ? "" : "border-b border-[rgba(0,0,0,0.06)]"}`}>
       <div>
-        <div className="text-mx-ink text-[15px]">{label}</div>
-        {caption ? <div className="text-mx-muted text-[12px]">{caption}</div> : null}
+        <div className="text-[13px] font-medium text-[#6b6b6b]">{label}</div>
+        {caption ? <div className="text-[11.5px] text-mx-muted">{caption}</div> : null}
       </div>
       <input
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-mx-card text-mx-ink rounded-mx-sm border border-mx-border px-2 py-1 text-[15px]"
+        className="bg-transparent text-right text-[18px] font-semibold text-mx-ink outline-none"
       />
     </div>
   );
 }
+
 function MealRow({
   label,
   value,
@@ -390,23 +456,21 @@ function MealRow({
   last?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between px-4 py-3 ${last ? "" : "border-mx-border border-b"}`}>
-      <button onClick={onToggle} className="flex items-center gap-2.5">
-        <span className={`flex size-5 items-center justify-center rounded-full border ${!skipped ? "border-mx-ink bg-mx-ink text-white" : "border-mx-muted"}`}>
-          {!skipped ? "✓" : ""}
-        </span>
-        <span className={`text-[15px] ${skipped ? "text-mx-muted line-through" : "text-mx-ink"}`}>{label}</span>
-      </button>
-      {!skipped ? (
-        <input
-          type="time"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="bg-mx-card text-mx-ink rounded-mx-sm border border-mx-border px-2 py-1 text-[15px]"
-        />
-      ) : (
-        <span className="text-mx-muted text-[13px]">Skipped</span>
-      )}
+    <div className={`flex items-center justify-between py-3 ${last ? "" : "border-b border-[rgba(0,0,0,0.06)]"}`}>
+      <div className="flex-1">
+        <div className="text-[13px] font-medium text-[#6b6b6b]">{label}</div>
+        {skipped ? (
+          <div className="text-[18px] font-medium text-mx-muted">Skipped</div>
+        ) : (
+          <input
+            type="time"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="bg-transparent text-[18px] font-semibold text-mx-ink outline-none"
+          />
+        )}
+      </div>
+      <Toggle on={!skipped} onToggle={onToggle} label={`Eat ${label.toLowerCase()}`} />
     </div>
   );
 }
