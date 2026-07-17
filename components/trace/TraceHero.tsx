@@ -25,8 +25,13 @@ const BARS = [1.1, 1.4, 0.95, 1.55, 1.2, 1.35, 1.0, 1.5, 1.15];
 
 export default function TraceHero() {
   const [phase, setPhase] = useState<"mic" | "bubble">("mic");
+  // Gate the card entrance on mount so the blurResolve animation reliably
+  // plays a beat after the hero paints (otherwise it can finish before the
+  // user is looking, or not replay on client navigation).
+  const [play, setPlay] = useState(false);
 
   useEffect(() => {
+    const tp = setTimeout(() => setPlay(true), 120);
     let t1: ReturnType<typeof setTimeout>;
     let t2: ReturnType<typeof setTimeout>;
     const loop = () => {
@@ -36,6 +41,7 @@ export default function TraceHero() {
     };
     loop();
     return () => {
+      clearTimeout(tp);
       clearTimeout(t1);
       clearTimeout(t2);
     };
@@ -56,7 +62,7 @@ export default function TraceHero() {
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#fdfdfd] via-transparent to-[#fdfdfd]" />
 
       {/* Left glass card — 320px, at 5vw / top 32% */}
-      <GlassCard className="tr-card-blur absolute left-[5vw] top-[32%] w-[320px]">
+      <GlassCard className={`${play ? "tr-card-blur" : "opacity-0"} absolute left-[5vw] top-[32%] w-[320px]`}>
         <div className="mb-[12px] text-[11.5px] text-white/45">Today&apos;s plan</div>
         <ul className="space-y-[23px]">
           {PLAN.map((t) => (
@@ -70,7 +76,7 @@ export default function TraceHero() {
 
       {/* Right glass card — 360px, at 5vw / top 16% */}
       <GlassCard
-        className="tr-card-blur absolute right-[5vw] top-[16%] w-[360px]"
+        className={`${play ? "tr-card-blur" : "opacity-0"} absolute right-[5vw] top-[16%] w-[360px]`}
         style={{ animationDelay: "0.12s" }}
       >
         <div className="mb-[12px] text-[11.5px] text-white/45">Up next</div>
