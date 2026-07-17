@@ -2,6 +2,68 @@
 
 import type { VisualBlock } from "@/lib/max/api";
 
+// Mirror of backend api/chat.py::_extract_visual_blocks. The prod backend
+// normally strips [VISUAL_BLOCK]{json}[/VISUAL_BLOCK] markers out of the reply
+// and returns a structured `visual_blocks[]`, but when the deployed backend
+// lags (or the marker survives), the raw JSON leaks into the chat text. This
+// client-side fallback parses + strips it so the web still renders the visual.
+const ALLOWED_BLOCK_TYPES = new Set([
+  "table",
+  "comparison",
+  "timeline",
+  "flowchart",
+  "stat_cards",
+  "checklist",
+]);
+const VISUAL_BLOCK_RE = /\[visual_block\]\s*([\s\S]*?)\s*\[\/visual_block\]/gi;
+
+/** Pull inline [visual_block] markers out of assistant text. Returns the clean
+ *  prose (markers removed, incl. any truncated/unclosed one) and parsed blocks. */
+export function extractVisualBlocks(text: string): {
+  clean: string;
+  blocks: VisualBlock[];
+} {
+  if (!text || !/\[visual_block\]/i.test(text)) return { clean: text, blocks: [] };
+  const blocks: VisualBlock[] = [];
+  VISUAL_BLOCK_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = VISUAL_BLOCK_RE.exec(text))) {
+    const raw = (m[1] || "").trim();
+    let obj: Record<string, unknown> | null = null;
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      // LLMs sometimes embed literal control chars inside JSON strings.
+      try {
+        obj = JSON.parse(
+          raw
+            // eslint-disable-next-line no-control-regex
+            .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, " ")
+            .replace(/[\n\r\t]/g, " "),
+        );
+      } catch {
+        continue;
+      }
+    }
+    const btype = String(obj?.type ?? "").trim().toLowerCase();
+    const data = obj?.data;
+    if (ALLOWED_BLOCK_TYPES.has(btype) && data && typeof data === "object") {
+      blocks.push({
+        type: btype,
+        title: obj?.title ? String(obj.title).trim() : undefined,
+        data,
+      } as VisualBlock);
+    }
+  }
+  let clean = text.replace(VISUAL_BLOCK_RE, "");
+  // Drop any unclosed/truncated marker (streamed reply cut mid-JSON) + stray
+  // method_confidence markers, then collapse the blank lines they leave behind.
+  clean = clean.replace(/\[visual_block\][\s\S]*/i, "");
+  clean = clean.replace(/\[\/?method_confidence\]/gi, "");
+  clean = clean.replace(/\n{3,}/g, "\n\n").trim();
+  return { clean, blocks: blocks.slice(0, 6) };
+}
+
 function Title({ title }: { title?: unknown }) {
   if (!title || typeof title !== "string") return null;
   return <div className="text-mx-ink mb-2 text-[13px] font-semibold">{title}</div>;

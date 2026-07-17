@@ -5,7 +5,7 @@ import type { ChatResponse } from "@/lib/max/api";
 import api from "@/lib/max/api";
 import { Icon } from "@/components/max/icons";
 import { ChatIcon } from "./chatIcons";
-import { VisualBlockRenderer } from "./VisualBlocks";
+import { VisualBlockRenderer, extractVisualBlocks } from "./VisualBlocks";
 
 export interface ChatMessage {
   id: string;
@@ -235,15 +235,22 @@ export default function MessageBubble({ message }: { message: ChatMessage }) {
   }
 
   // Assistant: full-width plain text, no bubble (iOS cg.assistantText 16/25).
+  // Parse any inline [visual_block] markers the backend didn't strip, so the
+  // reply renders the visual instead of dumping raw JSON. Structured blocks from
+  // extras take precedence; inline-parsed ones are the fallback.
+  const { clean, blocks: inlineBlocks } = extractVisualBlocks(message.content ?? "");
+  const visualBlocks =
+    extras?.visual_blocks?.length ? extras.visual_blocks : inlineBlocks;
+
   return (
     <div className="w-full px-1">
-      {message.content ? (
+      {clean ? (
         <div className="text-mx-ink space-y-1 text-[16px] leading-[25px]">
-          {renderRichText(message.content)}
+          {renderRichText(clean)}
         </div>
       ) : null}
 
-      {extras?.visual_blocks?.map((b, i) => (
+      {visualBlocks.map((b, i) => (
         <div key={i} className="mt-1 w-full">
           <VisualBlockRenderer block={b} />
         </div>
@@ -251,7 +258,7 @@ export default function MessageBubble({ message }: { message: ChatMessage }) {
 
       {extras?.products?.length ? <ProductCards products={extras.products} /> : null}
 
-      {message.content ? <AssistantActions text={message.content} /> : null}
+      {clean ? <AssistantActions text={clean} /> : null}
     </div>
   );
 }
