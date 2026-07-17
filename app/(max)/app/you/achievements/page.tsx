@@ -6,6 +6,7 @@ import api from "@/lib/max/api";
 import { queryKeys } from "@/lib/max/queryClient";
 import SubPageHeader from "@/components/max/SubPageHeader";
 import { Spinner } from "@/components/max/ui";
+import ClayBadge from "@/components/max/achievements/ClayBadge";
 
 interface Achievement {
   code: string;
@@ -16,12 +17,19 @@ interface Achievement {
   icon: string;
   earned: boolean;
   seen: boolean;
-  progress?: { current: number; target: number };
+  progress?: { current: number; target: number } | null;
 }
 
-// iOS renders categories in this fixed order.
-const CATEGORY_ORDER = ["Consistency", "Milestones", "Progress", "Discovery"];
+// iOS maps lowercase category keys → display labels, in this fixed order.
+const CATEGORY_LABEL: Record<string, string> = {
+  consistency: "Consistency",
+  milestones: "Milestones",
+  progress: "Progress",
+  discovery: "Discovery",
+};
+const CATEGORY_ORDER = ["consistency", "milestones", "progress", "discovery"];
 const GOLD = "#C9A24E";
+const EARNED_SUB = "#B58A1E";
 const TIER_LABEL: Record<string, string> = { bronze: "Bronze", silver: "Silver", gold: "Gold" };
 
 export default function AchievementsPage() {
@@ -29,18 +37,23 @@ export default function AchievementsPage() {
     queryKey: queryKeys.achievements,
     queryFn: () => api.getAchievements(),
   });
+  // XP/rank ride /schedules/active/full (same source as the iOS useGamificationQuery).
+  const gq = useQuery({
+    queryKey: queryKeys.schedulesActiveFull,
+    queryFn: () => api.getActiveSchedulesFull(),
+  });
+
   const data = q.data as
-    | {
-        achievements?: Achievement[];
-        earned_count?: number;
-        total?: number;
-        gamification?: { rank?: string; level?: number; xp_today?: number };
-      }
+    | { achievements?: Achievement[]; earned_count?: number; total?: number }
     | undefined;
   const list = data?.achievements ?? [];
   const earned = data?.earned_count ?? list.filter((a) => a.earned).length;
   const total = data?.total ?? list.length;
-  const gam = data?.gamification;
+
+  const gam = gq.data?.gamification as Record<string, unknown> | null | undefined;
+  const rank = gam?.rank as string | undefined;
+  const level = gam?.current_level as number | undefined;
+  const xpToday = (gam?.xp_earned_today as number | undefined) ?? 0;
 
   useEffect(() => {
     const unseen = list.filter((a) => a.earned && !a.seen).map((a) => a.code);
@@ -69,19 +82,21 @@ export default function AchievementsPage() {
               <span className="text-mx-ink text-[46px] font-semibold leading-none tracking-[-0.03em]">
                 {earned}
               </span>
-              <span className="text-mx-muted text-[24px] font-medium">/ {total}</span>
+              <span className="text-mx-muted text-[24px] font-medium tracking-[-0.01em]">
+                / {total}
+              </span>
             </div>
-            <div className="text-mx-ink-2 mt-1 text-[12.5px]">badges earned</div>
-            <div className="bg-mx-surface mt-4 h-1.5 w-[70%] overflow-hidden rounded-full">
+            <div className="text-mx-ink-2 mt-0.5 text-[12.5px] tracking-[0.03em]">badges earned</div>
+            <div className="bg-mx-surface mt-3.5 h-1.5 w-[70%] overflow-hidden rounded-full">
               <div
                 className="h-full rounded-full"
                 style={{ width: `${total ? (earned / total) * 100 : 0}%`, background: GOLD }}
               />
             </div>
-            {gam?.rank ? (
-              <div className="text-mx-muted mt-3 text-[12.5px]">
-                {gam.rank} · Level {gam.level ?? 1}
-                {gam.xp_today ? ` · +${gam.xp_today} XP today` : ""}
+            {rank ? (
+              <div className="text-mx-muted mt-2.5 text-[12.5px]">
+                {rank} · Level {level ?? 1}
+                {xpToday > 0 ? ` · +${xpToday.toLocaleString()} XP today` : ""}
               </div>
             ) : null}
           </div>
@@ -89,7 +104,7 @@ export default function AchievementsPage() {
           {/* Category sections */}
           {cats.map((cat) => (
             <div key={cat} className="mt-8">
-              <div className="mx-label mb-3">{cat}</div>
+              <div className="mx-label mb-3">{CATEGORY_LABEL[cat] ?? cat}</div>
               <div className="grid grid-cols-3 gap-x-2 gap-y-6">
                 {list
                   .filter((a) => a.category === cat)
@@ -110,48 +125,28 @@ export default function AchievementsPage() {
 }
 
 function BadgeCell({ a }: { a: Achievement }) {
-  const pct =
-    a.progress && a.progress.target > 0
-      ? Math.min(100, (a.progress.current / a.progress.target) * 100)
-      : 0;
-  const r = 34;
+  const frac =
+    a.progress && a.progress.target > 0 ? a.progress.current / a.progress.target : null;
+  const sub = a.earned
+    ? TIER_LABEL[a.tier] ?? ""
+    : a.progress && a.progress.target > 0
+      ? `${a.progress.current}/${a.progress.target}`
+      : "Locked";
   return (
-    <div className="flex flex-col items-center text-center">
-      <div className="relative flex size-[74px] items-center justify-center">
-        {a.earned ? (
-          <span className="bg-mx-ink flex size-[74px] items-center justify-center rounded-full text-white">
-            <svg viewBox="0 0 24 24" className="size-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12.5 10 17l9-10" />
-            </svg>
-          </span>
-        ) : (
-          <>
-            <svg viewBox="0 0 74 74" className="absolute inset-0 -rotate-90">
-              <circle cx="37" cy="37" r={r} fill="none" stroke="#D8D1C4" strokeWidth="2" />
-              {pct > 0 ? (
-                <circle
-                  cx="37" cy="37" r={r} fill="none"
-                  stroke="#1C1A17" strokeWidth="2" strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * r}
-                  strokeDashoffset={2 * Math.PI * r * (1 - pct / 100)}
-                />
-              ) : null}
-            </svg>
-            <span className="text-[22px] opacity-30">🔒</span>
-          </>
-        )}
-      </div>
+    <div className="flex flex-col items-center px-1 text-center">
+      <ClayBadge icon={a.icon} code={a.code} tier={a.tier} earned={a.earned} size={74} progress={frac} />
       <div
-        className={`mt-2 line-clamp-2 text-[12.5px] font-semibold ${a.earned ? "text-mx-ink" : "text-mx-ink-2"}`}
+        className={`mt-2 line-clamp-2 text-[12.5px] font-semibold leading-4 ${
+          a.earned ? "text-mx-ink" : "text-mx-ink-2"
+        }`}
       >
         {a.title}
       </div>
-      <div className="mt-0.5 text-[11px]" style={{ color: a.earned ? "#B58A1E" : "var(--color-mx-muted)" }}>
-        {a.earned
-          ? TIER_LABEL[a.tier] ?? ""
-          : a.progress && a.progress.target > 0
-            ? `${a.progress.current}/${a.progress.target}`
-            : "Locked"}
+      <div
+        className={`mt-0.5 text-[11px] ${a.earned ? "font-medium" : ""}`}
+        style={{ color: a.earned ? EARNED_SUB : "var(--color-mx-muted)" }}
+      >
+        {sub}
       </div>
     </div>
   );
