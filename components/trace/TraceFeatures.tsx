@@ -22,59 +22,58 @@ export default function TraceFeatures() {
           </p>
         </Reveal>
 
-        {/* One card per real feature (maps to the app's tabs) — no overlap. */}
         <div className="mt-[60px] grid gap-[16px] md:grid-cols-3">
-          {/* Coach */}
-          <Card className="md:col-span-2" mock={<AudioBars />}>
-            <h3 className="feat-title">A coach you just talk to.</h3>
+          {/* 1 — Facial analysis */}
+          <Card className="md:col-span-2" mock={<ScanMock />}>
+            <h3 className="feat-title">Facial analysis, every day.</h3>
             <p className="feat-body">
-              Tell Max what&apos;s going on — a rough day, a new goal, a plateau —
-              and it rewrites your plan on the spot. No forms, no menus. Just talk.
+              Max reads 25+ features and shows you exactly where you&apos;re strong
+              and where you&apos;re weak. Scan again any day and watch your progress
+              move — the flaws shrinking, the strengths climbing.
             </p>
           </Card>
-          {/* Privacy */}
-          <Card mock={<PhoneLock />}>
-            <h3 className="feat-title">Yours alone.</h3>
+          {/* 2 — Coach */}
+          <Card mock={<AudioBars />}>
+            <h3 className="feat-title">A coach you can talk to.</h3>
             <p className="feat-body">
-              Your scans, photos, and progress are private by default. Never a
-              feed, never sold.
+              Ask Max anything, like texting a friend who happens to be a looksmax
+              expert. It answers and adjusts your plan on the spot.
             </p>
           </Card>
 
-          {/* Scan */}
-          <Card mock={<ScanMock />}>
-            <h3 className="feat-title">Scan your potential.</h3>
+          {/* 3 — Daily reminders */}
+          <Card mock={<ReminderMock />}>
+            <h3 className="feat-title">Reminders that keep you on it.</h3>
             <p className="feat-body">
-              Three photos and Max reads 25+ features — a rating, an appeal score,
-              and exactly where your ceiling is.
+              Timed nudges for every step, so nothing slips — the plan actually
+              happens instead of sitting in a notes app.
             </p>
           </Card>
-          {/* Today / daily plan */}
-          <Card mock={<ArtifactMock />}>
-            <h3 className="feat-title">A plan that fits your day.</h3>
+          {/* 5 — Schedule + Google Cal */}
+          <Card mock={<CalMock />}>
+            <h3 className="feat-title">Fits your real schedule.</h3>
             <p className="feat-body">
-              Every max becomes a daily routine that reshuffles around your real
-              schedule — so today always has a plan you&apos;ll actually do.
+              Max shapes your routine around the hours you actually have — and
+              syncs it straight to your Google Calendar.
             </p>
           </Card>
-          {/* Progress */}
+          {/* 6 — Streak */}
           <Card mock={<StreakMock />}>
-            <h3 className="feat-title">See it working.</h3>
+            <h3 className="feat-title">Keep your streak alive.</h3>
             <p className="feat-body">
-              Streaks, levels, and progress photos turn small daily wins into
-              momentum you can feel.
+              Every day you show up builds a streak worth protecting. Small wins,
+              stacked into momentum you can feel.
             </p>
           </Card>
 
-          {/* The engine: 50+ courses stacked + hyperpersonalized */}
+          {/* 4 — 50+ courses → hyperpersonalized routine (the engine) */}
           <Card className="md:col-span-3" mock={<CoursesMock />} row>
-            <h3 className="feat-title">50+ courses, stacked and tuned to you.</h3>
-            <p className="feat-body max-w-[52ch]">
-              Stack skinmax, jawmax, hairmax, fitmax — as many as you want. Max
-              distills 50+ looksmaxxing courses into one engine, hyperpersonalizes
-              it to your scan and goals, and weaves every step into a single daily
-              plan that fits the hours you actually have. A routine built for your
-              face — not a generic checklist.
+            <h3 className="feat-title">50+ courses, distilled into one routine — built for you.</h3>
+            <p className="feat-body max-w-[54ch]">
+              No more grinding through 20-page looksmax PDFs or 30 hours of Skool
+              videos. Max reads the best of 50+ courses and rebuilds them into a
+              single hyperpersonalized routine — tuned to your scan, your goals,
+              and your day. You just do the next thing.
             </p>
           </Card>
         </div>
@@ -114,23 +113,36 @@ function Card({
 }
 
 /* ── Mini mockups ─────────────────────────────────────────────────────── */
-function StackMock() {
-  const maxes = ["Skinmax", "Jawmax", "Hairmax", "Fitmax"];
+function ReminderMock() {
   return (
-    <div className="relative h-[60px] w-[150px]">
-      {maxes.map((m, i) => (
-        <span
-          key={m}
-          className="absolute left-1/2 rounded-[8px] border border-white/12 bg-white/[0.05] px-[12px] py-[5px] text-[11.5px] text-white/85 backdrop-blur"
-          style={{
-            top: `${i * 11}px`,
-            transform: `translateX(-50%) translateX(${(i - 1.5) * 10}px)`,
-            zIndex: maxes.length - i,
-          }}
-        >
-          {m}
-        </span>
-      ))}
+    <div className="w-[190px] rounded-[10px] border border-white/12 bg-white/[0.05] p-[10px]">
+      <div className="flex items-center gap-[8px]">
+        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8" />
+          <path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" />
+        </svg>
+        <span className="text-[11px] text-white/40">Max · now</span>
+      </div>
+      <div className="mt-[7px] text-[12.5px] text-white/90">Mewing hold — 10 min</div>
+      <div className="text-[11px] text-white/45">Time to lock it in.</div>
+    </div>
+  );
+}
+function CalMock() {
+  return (
+    <div className="flex flex-col items-center gap-[8px]">
+      <div className="grid grid-cols-4 gap-[4px]">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <span
+            key={i}
+            className="size-[14px] rounded-[3px] border border-white/12"
+            style={{ background: i === 2 || i === 5 ? "rgba(0,113,227,0.35)" : "rgba(255,255,255,0.04)" }}
+          />
+        ))}
+      </div>
+      <span className="rounded-full border border-white/12 bg-white/[0.05] px-[10px] py-[3px] text-[10.5px] text-white/70">
+        Synced · Google Calendar
+      </span>
     </div>
   );
 }
@@ -165,43 +177,6 @@ function AudioBars() {
           className="block w-[3.2px] rounded-full bg-white/85"
           style={{ height: `${h * 100}%`, animation: `barPulse ${0.9 + (i % 5) * 0.15}s ease-in-out ${i * 0.06}s infinite` }}
         />
-      ))}
-    </div>
-  );
-}
-function PhoneLock() {
-  return (
-    <svg viewBox="0 0 48 60" className="h-[60px] w-auto" fill="none" stroke="white" strokeWidth="1.6">
-      <rect x="6" y="3" width="36" height="54" rx="6" />
-      <rect x="17" y="26" width="14" height="12" rx="2.5" fill="white" stroke="none" />
-      <path d="M20 26v-3a4 4 0 0 1 8 0v3" />
-    </svg>
-  );
-}
-function ArtifactMock() {
-  return (
-    <div className="tr-artifact-in flex items-center gap-[12px]">
-      <div className="rounded-[7px] border border-white/10 bg-white/[0.04] p-[8px]">
-        <div className="text-[10px] text-white/40">Max</div>
-        <div className="text-[12px] text-white/90">Evening set</div>
-      </div>
-      <span className="text-white/40">→</span>
-      <div className="rounded-[7px] border border-white/10 bg-white/[0.04] p-[8px]">
-        <div className="text-[10px] text-white/40">Routine</div>
-        <div className="text-[11.5px] text-white/85">Jaw set</div>
-        <div className="text-[11.5px] text-white/85">Posture</div>
-        <div className="text-[11.5px] text-white/85">Lift</div>
-      </div>
-    </div>
-  );
-}
-function PillsMock() {
-  return (
-    <div className="flex flex-col items-center gap-[7px]">
-      {["Plan", "Coach", "Scan"].map((p) => (
-        <span key={p} className="rounded-full border border-white/[0.12] bg-white/[0.04] px-[14px] py-[5px] text-[12px] text-white/85">
-          {p}
-        </span>
       ))}
     </div>
   );
