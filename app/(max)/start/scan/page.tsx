@@ -20,18 +20,19 @@ export default function StartScanPage() {
     saveAnswers({ ...a, scan_skipped: !scanned, scan_id: scanId ?? null });
   }
 
-  async function onComplete(c: Captured) {
-    setSubmitting(true);
-    setError(null);
-    try {
-      const { scan_id } = await api.uploadScanTripleBlobs(c.front, c.left, c.right);
-      api.analyzeScan(scan_id).catch(() => undefined); // analyze in background
-      mark(true, scan_id);
-      router.push("/start/quiz");
-    } catch {
-      setError("Upload failed — you can skip and add a scan later.");
-      setSubmitting(false);
-    }
+  function onComplete(c: Captured) {
+    // Funnel V4 behavior: upload + analyze run in the BACKGROUND while the
+    // user moves straight on to the quiz. The reveal/results gate later polls
+    // getLatestScan until the analysis lands — so we never block here.
+    mark(true);
+    api
+      .uploadScanTripleBlobs(c.front, c.left, c.right)
+      .then(({ scan_id }) => {
+        mark(true, scan_id);
+        return api.analyzeScan(scan_id).catch(() => undefined);
+      })
+      .catch(() => undefined);
+    router.push("/start/quiz");
   }
 
   function skip() {

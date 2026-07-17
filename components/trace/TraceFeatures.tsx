@@ -22,70 +22,59 @@ export default function TraceFeatures() {
           </p>
         </Reveal>
 
+        {/* One card per real feature (maps to the app's tabs) — no overlap. */}
         <div className="mt-[60px] grid gap-[16px] md:grid-cols-3">
-          {/* Stack your maxxes */}
-          <Card mock={<StackMock />}>
-            <h3 className="feat-title">Stack your maxxes.</h3>
-            <p className="feat-body">
-              Skinmax, jawmax, hairmax, fitmax — run them together. Max weaves
-              every max you pick into one routine that actually fits your day.
-            </p>
-          </Card>
-
-          {/* 50+ courses, hyperpersonalized */}
-          <Card className="md:col-span-2" mock={<CoursesMock />} row>
-            <h3 className="feat-title">50+ courses, tuned to you.</h3>
-            <p className="feat-body max-w-[48ch]">
-              We distilled 50+ looksmaxxing courses into one engine, then
-              hyperpersonalize it to your scan and your goals — and fit every
-              step to the hours you actually have. You get a plan built for your
-              face, not a generic checklist.
-            </p>
-          </Card>
-
+          {/* Coach */}
           <Card className="md:col-span-2" mock={<AudioBars />}>
-            <h3 className="feat-title">Talk it out.</h3>
+            <h3 className="feat-title">A coach you just talk to.</h3>
             <p className="feat-body">
-              Tell your coach what&apos;s going on — a rough day, a new goal, a
-              plateau. It adjusts your plan on the spot. No forms, just talk.
+              Tell Max what&apos;s going on — a rough day, a new goal, a plateau —
+              and it rewrites your plan on the spot. No forms, no menus. Just talk.
             </p>
           </Card>
+          {/* Privacy */}
           <Card mock={<PhoneLock />}>
             <h3 className="feat-title">Yours alone.</h3>
             <p className="feat-body">
-              Your scans, photos, and progress are yours. Private by default,
-              never a feed.
+              Your scans, photos, and progress are private by default. Never a
+              feed, never sold.
             </p>
           </Card>
 
+          {/* Scan */}
+          <Card mock={<ScanMock />}>
+            <h3 className="feat-title">Scan your potential.</h3>
+            <p className="feat-body">
+              Three photos and Max reads 25+ features — a rating, an appeal score,
+              and exactly where your ceiling is.
+            </p>
+          </Card>
+          {/* Today / daily plan */}
           <Card mock={<ArtifactMock />}>
-            <h3 className="feat-title">One plan, every day.</h3>
+            <h3 className="feat-title">A plan that fits your day.</h3>
             <p className="feat-body">
-              Your maxes become a daily routine that reshuffles around your real
-              schedule — so today always has a plan.
+              Every max becomes a daily routine that reshuffles around your real
+              schedule — so today always has a plan you&apos;ll actually do.
             </p>
           </Card>
-          <Card mock={<PillsMock />}>
-            <h3 className="feat-title">Everything in one place.</h3>
-            <p className="feat-body">
-              Plan, coach, and scans live together. One app instead of five
-              half-used ones.
-            </p>
-          </Card>
+          {/* Progress */}
           <Card mock={<StreakMock />}>
             <h3 className="feat-title">See it working.</h3>
             <p className="feat-body">
               Streaks, levels, and progress photos turn small daily wins into
-              momentum you can actually feel.
+              momentum you can feel.
             </p>
           </Card>
 
-          <Card className="md:col-span-3" mock={<ScanMock />} row>
-            <h3 className="feat-title">Scan and see your potential.</h3>
-            <p className="feat-body max-w-[46ch]">
-              Three quick photos and Max reads your features — a rating, an
-              appeal score, and where you can go. Then it points your plan at the
-              highest-leverage changes.
+          {/* The engine: 50+ courses stacked + hyperpersonalized */}
+          <Card className="md:col-span-3" mock={<CoursesMock />} row>
+            <h3 className="feat-title">50+ courses, stacked and tuned to you.</h3>
+            <p className="feat-body max-w-[52ch]">
+              Stack skinmax, jawmax, hairmax, fitmax — as many as you want. Max
+              distills 50+ looksmaxxing courses into one engine, hyperpersonalizes
+              it to your scan and goals, and weaves every step into a single daily
+              plan that fits the hours you actually have. A routine built for your
+              face — not a generic checklist.
             </p>
           </Card>
         </div>
