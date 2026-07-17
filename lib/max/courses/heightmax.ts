@@ -1,3 +1,5 @@
+// AUTO-SYNCED from maxapp:data/courses/heightmax.ts by scripts/sync-from-maxapp.mjs — do not edit here.
+// Edit the source in the maxapp repo, then re-run the sync.
 /**
  * HEIGHTMAX course content. Posture, decompression, perceived height,
  * vertical-read styling. See ./courseContent.ts for the schema.

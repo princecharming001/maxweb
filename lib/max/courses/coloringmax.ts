@@ -1,3 +1,5 @@
+// AUTO-SYNCED from maxapp:data/courses/coloringmax.ts by scripts/sync-from-maxapp.mjs — do not edit here.
+// Edit the source in the maxapp repo, then re-run the sync.
 /**
  * COLORINGMAX course content — the first creator course.
  *

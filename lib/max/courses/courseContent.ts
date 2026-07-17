@@ -1,9 +1,11 @@
+// AUTO-SYNCED from maxapp:data/courseContent.ts by scripts/sync-from-maxapp.mjs — do not edit here.
+// Edit the source in the maxapp repo, then re-run the sync.
 /**
  * Course-content schema + module registry.
  *
- * Each maxx ships its course in its own file under `./courses/{id}.ts`.
+ * Each maxx ships its course in its own file under `./{id}.ts`.
  * Adding a new module:
- *   1. Create `./courses/{id}.ts` exporting a `CourseModule`
+ *   1. Create `./{id}.ts` exporting a `CourseModule`
  *   2. Import it here and register it in the COURSES map
  * The TOC + Reader render uniformly from this shape — no UI changes.
  */

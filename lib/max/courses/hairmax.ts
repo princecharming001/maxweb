@@ -1,3 +1,5 @@
+// AUTO-SYNCED from maxapp:data/courses/hairmax.ts by scripts/sync-from-maxapp.mjs — do not edit here.
+// Edit the source in the maxapp repo, then re-run the sync.
 /**
  * HAIRMAX course content. Hair loss + hair quality. See ./courseContent.ts
  * for the schema.

@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "sync:maxapp": "node scripts/sync-from-maxapp.mjs",
+    "sync:maxapp:check": "node scripts/sync-from-maxapp.mjs --check"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",

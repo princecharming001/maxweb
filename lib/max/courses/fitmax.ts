@@ -1,3 +1,5 @@
+// AUTO-SYNCED from maxapp:data/courses/fitmax.ts by scripts/sync-from-maxapp.mjs — do not edit here.
+// Edit the source in the maxapp repo, then re-run the sync.
 /**
  * FITMAX course content. Body composition + training + nutrition + presentation.
  * Derived from rag_content/fitmax/*.md (the comprehensive coaching docs).

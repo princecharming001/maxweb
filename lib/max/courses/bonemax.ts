@@ -1,3 +1,5 @@
+// AUTO-SYNCED from maxapp:data/courses/bonemax.ts by scripts/sync-from-maxapp.mjs — do not edit here.
+// Edit the source in the maxapp repo, then re-run the sync.
 /**
  * BONEMAX course content. Facial structure, posture, debloat, fraudmaxxing.
  * Derived from rag_content/bonemax/*.md (the comprehensive coaching docs).

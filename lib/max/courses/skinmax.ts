@@ -1,3 +1,5 @@
+// AUTO-SYNCED from maxapp:data/courses/skinmax.ts by scripts/sync-from-maxapp.mjs — do not edit here.
+// Edit the source in the maxapp repo, then re-run the sync.
 /**
  * SKINMAX course content. See ./courseContent.ts for the schema.
  */
