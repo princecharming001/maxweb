@@ -1,26 +1,338 @@
 @import "tailwindcss";
 
+/* Design tokens lifted from tryclean.ai's computed CSS custom properties. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: 222 18% 7%;
+  --paper-2: 222 15% 11%;
+  --paper-edge: 220 12% 20%;
+
+  --ink: #e6e6e3;
+  --ink-2: #9b9b98;
+  --ink-3: #7a7a77;
+  --ink-4: #565654;
+  --ink-soft: 220 8% 56%;
+
+  --accent: #5eb1ff;
+  --accent-light: 209 100% 68%;
+
+  --panel: #1f1f1f;
+  --panel-tint: #2c2c2c;
+  --border-strong: #373737;
+  --border-soft: #2a2a2a;
+
+  --green: #71b89a;
+  --amber: #d9b03a;
+  --red: #ff7369;
+
+  --radius: 2px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: hsl(var(--paper));
+  --color-paper-2: hsl(var(--paper-2));
+  --color-paper-edge: hsl(var(--paper-edge));
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-ink-soft: hsl(var(--ink-soft));
+
+  --color-accent: var(--accent);
+  --color-accent-light: hsl(var(--accent-light));
+
+  --color-panel: var(--panel);
+  --color-panel-tint: var(--panel-tint);
+  --color-edge: var(--border-strong);
+  --color-edge-soft: var(--border-soft);
+
+  --color-green: var(--green);
+  --color-amber: var(--amber);
+  --color-red: var(--red);
+
+  --font-display: var(--font-instrument-serif);
+  --font-sans: var(--font-geist);
+  --font-body: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
+  --font-grotesk: var(--font-space-grotesk);
+  --font-mona: var(--font-mona-sans);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ══════════════════════════════════════════════════════════════════════════
+   Max app design system — lifted from mobile theme/dark.ts (a LIGHT theme).
+   All tokens prefixed `mx-` so they never collide with the dark landing.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --mx-bg: #ffffff;
+  --mx-surface: #f2f2f2;
+  --mx-surface-light: #f7f7f7;
+  --mx-card: #ffffff;
+  --mx-ink: #111113;
+  --mx-ink-2: #555555;
+  --mx-muted: #9a9a9a;
+  --mx-accent: #2c6bed;
+  --mx-accent-light: #5a8cf2;
+  --mx-accent-muted: rgba(44, 107, 237, 0.1);
+  --mx-success: #2f9e60;
+  --mx-warning: #b5791c;
+  --mx-error: #c0452c;
+  --mx-border: rgba(0, 0, 0, 0.08);
+  --mx-border-light: #ebebeb;
+  --mx-divider: #e5e5e5;
+}
+
+@theme inline {
+  --color-mx-bg: var(--mx-bg);
+  --color-mx-surface: var(--mx-surface);
+  --color-mx-surface-light: var(--mx-surface-light);
+  --color-mx-card: var(--mx-card);
+  --color-mx-ink: var(--mx-ink);
+  --color-mx-ink-2: var(--mx-ink-2);
+  --color-mx-muted: var(--mx-muted);
+  --color-mx-accent: var(--mx-accent);
+  --color-mx-accent-light: var(--mx-accent-light);
+  --color-mx-accent-muted: var(--mx-accent-muted);
+  --color-mx-success: var(--mx-success);
+  --color-mx-warning: var(--mx-warning);
+  --color-mx-error: var(--mx-error);
+  --color-mx-border: var(--mx-border);
+  --color-mx-border-light: var(--mx-border-light);
+  --color-mx-divider: var(--mx-divider);
+
+  --radius-mx-sm: 10px;
+  --radius-mx-md: 14px;
+  --radius-mx-lg: 18px;
+  --radius-mx-xl: 22px;
+  --radius-mx-2xl: 28px;
+
+  --font-mx-serif: var(--font-fraunces);
+  --font-mx-sans: var(--font-matter);
+
+  --shadow-mx-sm: 0 1px 4px rgb(0 0 0 / 0.04);
+  --shadow-mx-md: 0 4px 14px rgb(0 0 0 / 0.05);
+  --shadow-mx-lg: 0 8px 24px rgb(0 0 0 / 0.07);
+  --shadow-mx-xl: 0 12px 36px rgb(0 0 0 / 0.09);
+}
+
+/* The Max app surface: white canvas, ink text, Matter body font. */
+.theme-max {
+  background: var(--mx-bg);
+  color: var(--mx-ink);
+  font-family: var(--font-matter), system-ui, sans-serif;
+}
+.theme-max ::selection {
+  background: var(--mx-accent-muted);
+}
+
+/* Uppercase tracked micro-label used across Max screens. */
+.mx-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mx-muted);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Theme-neutral root; each route group paints its own surface. */
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Fine film grain laid over every section — the exact feTurbulence the
+   target uses (baseFrequency 1.6, 1 octave, 3% alpha, 160px tile). */
+.paper-grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='1' seed='3'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.03 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Warm grain for the photographic cards. */
+.top-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+  background-size: 280px 280px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.55  0 0 0 0 0.40  0 0 0 0.42 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Uppercase mono micro-label — nav links, buttons, footer column heads. */
+.label-mono {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.32px;
+  text-transform: uppercase;
+}
+
+/* ---------- Animation system (keyframes lifted from the target) ---------- */
+
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(14px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes ddRise {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ddRowIn {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes ddShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes ddSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes pplRowIn {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes sigStepIn {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes sigPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Scroll-reveal: hidden until the IntersectionObserver flips .reveal-in.
+   Curve + distance match the target's `.js [data-reveal]` rules. */
+.reveal-init {
+  opacity: 0;
+  transform: translateY(24px);
+  will-change: opacity, transform;
+  transition:
+    opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal-init.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Button press physics. */
+.cta-press {
+  transition:
+    transform 0.16s cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.cta-press:active {
+  transform: scale(0.97);
+}
+
+/* Table rows: invisible until the container gets .rows-in, then each row
+   staggers in via --i (set inline per row). */
+.rows-pending .ppl-row { opacity: 0; }
+.rows-in .ppl-row {
+  opacity: 0;
+  animation: pplRowIn 0.24s both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+
+.sig-in { animation: sigStepIn 0.45s both; }
+.sig-dot { animation: sigPulse 1.6s ease-in-out infinite; }
+.dd-rise { animation: ddRise 0.4s both; }
+.dd-row-in { animation: ddRowIn 0.24s both; }
+.dd-caret {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  background: currentColor;
+  vertical-align: text-bottom;
+  animation: cursor-blink 1s step-end infinite;
+}
+.dd-shimmer {
+  background: linear-gradient(90deg, #565654 25%, #e6e6e3 50%, #565654 75%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ddShimmer 1.6s linear infinite;
+}
+.dd-spin { animation: ddSpin 0.9s linear infinite; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Trace-style landing — design system cloned from remindmetrace.com
+   (off-white canvas, near-black ink, Apple-blue accent, PP Neue Montreal Light)
+   ══════════════════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: "PP Neue Montreal";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("https://remindmetrace.com/fonts/PPNeueMontreal-Light.woff2") format("woff2");
+}
+
+.theme-trace {
+  --tr-bg: #fdfdfd;
+  --tr-ink: #0f1012;
+  --tr-ink-mute: rgba(15, 16, 18, 0.5);
+  --tr-ink-faint: rgba(15, 16, 18, 0.4);
+  --tr-ink-line: rgba(15, 16, 18, 0.22);
+  --tr-accent: #0071e3;
+  --tr-red: #ff453a;
+  --tr-dark: #0a0a0a;
+  background: var(--tr-bg);
+  color: var(--tr-ink);
+  font-family: "PP Neue Montreal", "Hanken Grotesk", system-ui, -apple-system,
+    sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.015em;
+}
+
+/* Hero micro-interaction keyframes — copied from the target verbatim. */
+@keyframes blurResolve {
+  0% { opacity: 0; filter: blur(10px); transform: scale(0.97); }
+  100% { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+@keyframes artifactIn {
+  0% { opacity: 0; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes barPulse {
+  0%, 100% { opacity: 0.5; height: 28%; }
+  50% { opacity: 1; height: 100%; }
+}
+@keyframes micIn {
+  0% { opacity: 0; filter: blur(10px); transform: translateY(8px) scale(0.96); }
+  100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+}
+@keyframes micExit {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(6px) scale(0.98); }
+}
+@keyframes bubbleIn {
+  0% { opacity: 0; filter: blur(10px); transform: translateY(8px) scale(0.97); }
+  100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+}
+@keyframes bubbleOut {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-6px) scale(0.98); }
+}
+
+/* Scroll-reveal for the dark sections (fade + rise, quint ease). */
+.tr-reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.tr-reveal.tr-in {
+  opacity: 1;
+  transform: none;
+}
+
+.tr-card-blur { animation: blurResolve 0.85s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.tr-artifact-in { animation: artifactIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
