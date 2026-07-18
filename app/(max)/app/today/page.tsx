@@ -1,340 +1,339 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import api, { type PlannerTask, type PlannerToday } from "@/lib/max/api";
+import { useMemo, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import api, { type PlannerTask } from "@/lib/max/api";
 import { queryKeys } from "@/lib/max/queryClient";
-import { fmtTime, isDone, isSkipped, toMin } from "@/lib/max/format";
-import { Button, Card, LinkButton, Spinner } from "@/components/max/ui";
+import { useMaxAuth } from "@/context/MaxAuthContext";
 import { Icon } from "@/components/max/icons";
-import Toast, { type ToastState } from "@/components/max/Toast";
-import TaskRow from "@/components/max/today/TaskRow";
+import { Spinner } from "@/components/max/ui";
+import HabitCard from "@/components/max/home/HabitCard";
 import TaskSheet from "@/components/max/today/TaskSheet";
+import {
+  buildMaxxMaps,
+  mergeSchedules,
+  diffDaysISO,
+  normalizeMaxxId,
+  knownMaxLabel,
+  formatScheduleDayLabel,
+  type MergedScheduleTask,
+  type FullSchedules,
+} from "@/components/max/home/schedule";
 
-export default function TodayPage() {
+type DayCell = {
+  date: string;
+  index: number;
+  total: number;
+  done: number;
+  isToday: boolean;
+};
+
+/**
+ * The iOS HOME tab, ported to the web. Kicker + big "DAY X / 365" headline, a
+ * horizontal day strip with completion dots, the selected day's HABITS list,
+ * an Explore nudge when no program is running, and the wellness disclaimer.
+ * All data comes from `getActiveSchedulesFull` (the mobile `full` object).
+ */
+export default function HomePage() {
   const qc = useQueryClient();
-  const qk = queryKeys.plannerToday();
-  const [toast, setToast] = useState<ToastState | null>(null);
+  const { user } = useMaxAuth();
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [openTask, setOpenTask] = useState<PlannerTask | null>(null);
+  const inFlight = useRef(new Set<string>());
 
-  const todayQ = useQuery({
-    queryKey: qk,
-    queryFn: () => api.getPlannerToday(),
-  });
-  const streakQ = useQuery({
+  const schedulesQ = useQuery({
     queryKey: queryKeys.schedulesActiveFull,
     queryFn: () => api.getActiveSchedulesFull(),
     staleTime: 60_000,
   });
 
-  const data = todayQ.data;
+  // The API types `schedules` as unknown[]; the real payload also carries
+  // day_number / journey_start_date, so read it through the loose Full shape.
+  const full = schedulesQ.data as unknown as FullSchedules | undefined;
 
-  // Optimistic helper — the mobile snapshotAndPatch pattern.
-  async function snapshotAndPatch(patch: (old: PlannerToday) => PlannerToday) {
-    await qc.cancelQueries({ queryKey: qk });
-    const prev = qc.getQueryData<PlannerToday>(qk);
-    qc.setQueryData<PlannerToday>(qk, (old) => (old ? patch(old) : old));
-    return { prev };
-  }
-  function patchStatus(taskId: string | undefined, status: string) {
-    return (old: PlannerToday): PlannerToday => ({
-      ...old,
-      tasks: old.tasks.map((t) =>
-        t.task_id === taskId ? { ...t, status } : t,
-      ),
+  // Merge schedules → per-date rows, and derive the day strip + "DAY X" index.
+  const { byDate, today, todayIndex, days } = useMemo(() => {
+    const todayISO = new Date().toISOString().split("T")[0];
+    if (!full) {
+      return {
+        byDate: {} as Record<string, MergedScheduleTask[]>,
+        today: todayISO,
+        todayIndex: 1,
+        days: [] as DayCell[],
+      };
+    }
+    const { labels, colors } = buildMaxxMaps([]);
+    const { byDate } = mergeSchedules(full.schedules ?? [], labels, colors);
+    const today = full.today_date || full.schedule_streak?.today_date || todayISO;
+    // Stable Day-1 anchor from the backend → real calendar day numbers; falls
+    // back to positional indexing when an older backend omits it.
+    const journeyStart =
+      full.journey_start_date || full.schedule_streak?.journey_start_date || null;
+    const backendDayNumber = full.day_number ?? full.schedule_streak?.day_number ?? null;
+    const dayNumberFor = (d: string) =>
+      journeyStart ? diffDaysISO(journeyStart, d) + 1 : null;
+    const dates = Object.keys(byDate)
+      .filter((d) => (byDate[d] || []).length > 0)
+      .sort();
+    const days: DayCell[] = dates.map((d, i) => {
+      const rows = byDate[d] || [];
+      return {
+        date: d,
+        index: dayNumberFor(d) ?? i + 1,
+        total: rows.length,
+        done: rows.filter((r) => r.status === "completed").length,
+        isToday: d === today,
+      };
     });
-  }
+    const todayIndex =
+      backendDayNumber ??
+      dayNumberFor(today) ??
+      (dates.filter((d) => d <= today).length || 1);
+    return { byDate, today, todayIndex, days };
+  }, [full]);
 
-  const doneMut = useMutation({
-    mutationFn: (t: PlannerTask) =>
-      api.completeScheduleTask(t.schedule_id!, t.task_id!),
-    onMutate: (t) => snapshotAndPatch(patchStatus(t.task_id, "completed")),
-    onError: (_e, _t, ctx) => {
-      if (ctx?.prev) qc.setQueryData(qk, ctx.prev);
-      setToast({ message: "Couldn't save. Try again." });
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: qk });
-      qc.invalidateQueries({ queryKey: queryKeys.schedulesActiveFull });
-    },
-  });
+  // The strip is ALWAYS shown — synthesize a 30-day strip when there's no plan.
+  const stripDays: DayCell[] =
+    days.length > 0
+      ? days
+      : Array.from({ length: 30 }, (_, i) => ({
+          date: `synthetic-${i + 1}`,
+          index: i + 1,
+          total: 0,
+          done: 0,
+          isToday: i === 0,
+        }));
 
-  const undoMut = useMutation({
-    mutationFn: (t: PlannerTask) =>
-      api.uncompleteScheduleTask(t.schedule_id!, t.task_id!),
-    onMutate: (t) => snapshotAndPatch(patchStatus(t.task_id, "pending")),
-    onError: (_e, _t, ctx) => {
-      if (ctx?.prev) qc.setQueryData(qk, ctx.prev);
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: qk });
-      qc.invalidateQueries({ queryKey: queryKeys.schedulesActiveFull });
-    },
-  });
+  const activeDate = selectedDate ?? today;
+  const selectedRows = byDate[activeDate] ?? [];
+  const activeDayIndex = selectedDate
+    ? (stripDays.find((d) => d.date === selectedDate)?.index ?? todayIndex)
+    : todayIndex;
+  const activeLabel =
+    formatScheduleDayLabel(selectedDate ?? today) ?? "Today";
 
-  const skipMut = useMutation({
-    mutationFn: (t: PlannerTask) =>
-      api.skipPlannerTask(t.schedule_id!, t.task_id!),
-    onMutate: (t) => snapshotAndPatch(patchStatus(t.task_id, "skipped")),
-    onError: (_e, _t, ctx) => {
-      if (ctx?.prev) qc.setQueryData(qk, ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: qk }),
-  });
+  // Distinct running programs — drives the "no program yet" nudge.
+  const activeProgramCount = useMemo(() => {
+    const seen = new Set<string>();
+    for (const s of full?.schedules ?? []) {
+      const mid = normalizeMaxxId(s.maxx_id);
+      const key = (mid || String(s.course_title || s.id || "")).toLowerCase();
+      if (key) seen.add(key);
+    }
+    return seen.size;
+  }, [full]);
 
-  const lockInMut = useMutation({
-    mutationFn: () => api.plannerLockIn(),
-    onMutate: () =>
-      snapshotAndPatch((old) => ({ ...old, locked_in: true })),
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(qk, ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: qk }),
-  });
+  const primaryMaxLabel = useMemo(() => {
+    const ob = user?.onboarding as
+      | { goals?: string[]; facial_scan_summary?: { suggested_modules?: string[] } }
+      | undefined;
+    return (
+      knownMaxLabel(ob?.facial_scan_summary?.suggested_modules?.[0]) ??
+      knownMaxLabel(ob?.goals?.[0])
+    );
+  }, [user]);
 
-  function toggle(t: PlannerTask) {
-    if (isDone(t.status)) {
-      undoMut.mutate(t);
-    } else {
-      doneMut.mutate(t);
-      setToast({
-        message: "Nice — marked done.",
-        actionLabel: "Undo",
-        onAction: () => undoMut.mutate(t),
-      });
+  const initial = (
+    user?.first_name?.[0] ||
+    user?.email?.[0] ||
+    "U"
+  ).toUpperCase();
+  const avatarUrl = user?.profile?.avatar_url
+    ? api.resolveAttachmentUrl(user.profile.avatar_url)
+    : undefined;
+
+  const loading = schedulesQ.isPending && !schedulesQ.data;
+  const errText = schedulesQ.isError
+    ? (schedulesQ.error as { response?: { data?: { detail?: string } } })?.response?.data
+        ?.detail || "Could not load today’s tasks."
+    : null;
+
+  async function toggleTask(row: MergedScheduleTask) {
+    const key = `${row.scheduleId}:${row.task_id}`;
+    if (inFlight.current.has(key)) return;
+    inFlight.current.add(key);
+
+    const completing = row.status !== "completed";
+    const newStatus = completing ? "completed" : "pending";
+    const prev = qc.getQueryData(queryKeys.schedulesActiveFull);
+    // Optimistic flip FIRST (synchronous), then cancel in-flight refetches so
+    // they can't clobber it — the mobile toggleTodayTask ordering.
+    qc.setQueryData(queryKeys.schedulesActiveFull, (old: FullSchedules | undefined) => {
+      if (!old?.schedules) return old;
+      return {
+        ...old,
+        schedules: old.schedules.map((s) =>
+          s.id !== row.scheduleId
+            ? s
+            : {
+                ...s,
+                days: (s.days ?? []).map((d) => ({
+                  ...d,
+                  tasks: (d.tasks ?? []).map((t) =>
+                    t.task_id === row.task_id ? { ...t, status: newStatus } : t,
+                  ),
+                })),
+              },
+        ),
+      };
+    });
+    void qc.cancelQueries({ queryKey: queryKeys.schedulesActiveFull });
+    try {
+      if (completing) await api.completeScheduleTask(row.scheduleId, row.task_id);
+      else await api.uncompleteScheduleTask(row.scheduleId, row.task_id);
+      void qc.invalidateQueries({ queryKey: queryKeys.schedulesActiveFull });
+    } catch {
+      qc.setQueryData(queryKeys.schedulesActiveFull, prev);
+    } finally {
+      inFlight.current.delete(key);
     }
   }
-  function skip(t: PlannerTask) {
-    skipMut.mutate(t);
-    setToast({
-      message: "Skipped for today.",
-      actionLabel: "Undo",
-      onAction: () => undoMut.mutate(t),
-    });
-  }
-
-  const streak =
-    streakQ.data?.schedule_streak?.current ??
-    data?.tasks?.length ??
-    0;
-  const gam = streakQ.data?.gamification;
-
-  const sortedTasks = useMemo(
-    () =>
-      [...(data?.tasks ?? [])].sort((a, b) => toMin(a.time) - toMin(b.time)),
-    [data?.tasks],
-  );
-  const doneCount = sortedTasks.filter((t) => isDone(t.status)).length;
-  const totalActionable = sortedTasks.filter((t) => !isSkipped(t.status)).length;
-
-  const todayDate = data?.date
-    ? new Date(data.date + "T00:00:00").toLocaleDateString(undefined, {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      })
-    : "";
-
-  if (todayQ.isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (todayQ.isError) {
-    return (
-      <EmptyState
-        title="Couldn't load your day"
-        body="We hit a snag reaching the server. Try again in a moment."
-        action={
-          <Button onClick={() => todayQ.refetch()}>Retry</Button>
-        }
-      />
-    );
-  }
-
-  const hasPlan = sortedTasks.length > 0;
 
   return (
-    <div>
-      {/* ── Single phone-width column ───────────────────────────────── */}
-      <div>
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="mx-label">{todayDate}</div>
-            <h1 className="font-mx-serif text-mx-ink mt-1 text-[34px] leading-none">
-              Today
-            </h1>
-          </div>
-          {/* Streak ring, top-right like iOS */}
-          <div className="flex flex-col items-center">
-            <div className="relative flex size-12 items-center justify-center">
-              <svg viewBox="0 0 48 48" className="absolute inset-0 -rotate-90">
-                <circle cx="24" cy="24" r="21" fill="none" stroke="var(--color-mx-surface)" strokeWidth="4" />
-                <circle
-                  cx="24" cy="24" r="21" fill="none"
-                  stroke="var(--color-mx-accent)" strokeWidth="4" strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 21}
-                  strokeDashoffset={2 * Math.PI * 21 * (1 - Math.min(streak, 30) / 30)}
-                />
-              </svg>
-              <span className="text-mx-ink text-[15px] font-semibold tabular-nums">{streak}</span>
-            </div>
-            <span className="text-mx-muted mt-1 text-[10px]">day streak</span>
-          </div>
+    <div className="bg-mx-surface -mx-5 -mt-6 min-h-screen px-6 pb-16 pt-5">
+      {/* ── Top bar: bell + avatar (avatar → Profile) ─────────────────────── */}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="shadow-mx-sm text-mx-ink flex size-[38px] items-center justify-center rounded-full bg-white"
+        >
+          <Icon name="bell" className="size-[19px]" />
+        </button>
+        <Link
+          href="/app/you"
+          aria-label="Open profile"
+          className="bg-mx-ink flex size-[38px] items-center justify-center overflow-hidden rounded-full"
+        >
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <span className="text-[15px] font-semibold text-white">{initial}</span>
+          )}
+        </Link>
+      </div>
+
+      {/* ── Header: kicker + DAY X / 365 ──────────────────────────────────── */}
+      <div className="pb-[18px] pt-2.5">
+        <div className="font-mx-sans text-mx-muted mb-1.5 text-[12px] font-semibold uppercase tracking-[0.14em]">
+          {activeLabel.toUpperCase()}
+        </div>
+        <h1 className="font-mx-sans text-mx-ink text-[44px] font-extrabold leading-none tracking-[-0.035em]">
+          DAY {activeDayIndex}
+          <span className="text-mx-muted font-bold"> / 365</span>
+        </h1>
+      </div>
+
+      {/* ── Day strip (bleeds to the gray edges, scrolls horizontally) ────── */}
+      <div className="-mx-6 flex gap-2.5 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {stripDays.map((d) => {
+          const onPill = selectedDate ? d.date === selectedDate : d.isToday;
+          const complete = d.total > 0 && d.done >= d.total;
+          const partial = d.done > 0 && d.done < d.total;
+          return (
+            <button
+              key={d.date}
+              type="button"
+              onClick={() => setSelectedDate(d.date)}
+              aria-label={`Day ${d.index}`}
+              className={`rounded-mx-md flex h-[84px] w-[58px] shrink-0 flex-col items-center justify-center gap-3 border-[1.5px] transition ${
+                complete
+                  ? "bg-mx-ink border-transparent"
+                  : onPill
+                    ? "border-mx-ink bg-transparent"
+                    : "border-mx-border-light bg-transparent"
+              }`}
+            >
+              <span
+                className={`text-[17px] font-semibold ${
+                  complete ? "text-white" : onPill ? "text-mx-ink" : "text-mx-muted"
+                }`}
+              >
+                {d.index}
+              </span>
+              <span
+                className={`size-3 rounded-full ${
+                  complete
+                    ? "bg-white"
+                    : partial
+                      ? onPill
+                        ? "bg-mx-ink"
+                        : "bg-mx-muted"
+                      : `border-[1.5px] ${onPill ? "border-mx-ink" : "border-mx-border-light"}`
+                }`}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── HABITS ────────────────────────────────────────────────────────── */}
+      <div className="pt-[26px]">
+        <div className="font-mx-sans text-mx-ink mb-4 text-[13px] font-extrabold uppercase tracking-[0.06em]">
+          HABITS
         </div>
 
-        {data?.today_read ? (
-          <div className="mt-3 flex items-center gap-2">
-            <span
-              className="inline-block size-2.5 rounded-full"
-              style={{ background: data.today_read.color }}
-            />
-            <p className="text-mx-ink-2 text-[14px]">{data.today_read.line}</p>
+        {errText ? <div className="text-mx-error mb-2 text-[13px]">{errText}</div> : null}
+
+        {loading && selectedRows.length === 0 ? (
+          <div className="flex justify-center py-6">
+            <Spinner />
           </div>
         ) : null}
 
-        {/* progress + lock-in */}
-        {hasPlan ? (
-          <div className="mt-5 flex items-center gap-4">
-            <div className="bg-mx-surface h-1.5 flex-1 overflow-hidden rounded-full">
-              <div
-                className="bg-mx-ink h-full rounded-full transition-all"
-                style={{
-                  width: `${totalActionable ? (doneCount / totalActionable) * 100 : 0}%`,
-                }}
-              />
-            </div>
-            <span className="text-mx-muted text-[13px]">
-              {doneCount} of {totalActionable} done
-            </span>
+        {!loading && !errText && selectedRows.length === 0 ? (
+          <div className="py-6 text-center">
+            <p className="text-mx-muted text-[14px]">
+              {activeDate === today
+                ? "No habits for today. Start a program to begin."
+                : "No habits scheduled for this day."}
+            </p>
           </div>
         ) : null}
 
-        {data && !data.locked_in && hasPlan ? (
-          <div className="mt-4">
-            <Button
-              variant="accent"
-              size="sm"
-              onClick={() => lockInMut.mutate()}
-              disabled={lockInMut.isPending}
-            >
-              Lock in today
-            </Button>
-          </div>
-        ) : null}
-
-        {/* Timeline */}
-        {hasPlan ? (
-          <div className="relative mt-7">
-            <div className="bg-mx-border absolute bottom-2 left-[11px] top-2 w-px" />
-            <div className="space-y-0">
-              {sortedTasks.map((t) => (
-                <TaskRow
-                  key={t.task_id}
-                  task={t}
-                  onToggle={toggle}
-                  onSkip={skip}
-                  onOpen={setOpenTask}
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <EmptyState
-            className="mt-8"
-            title="No plan yet"
-            body="Build your daily plan with the coach, or browse programs to add one."
-            action={
-              <div className="flex gap-3">
-                <LinkButton href="/app/coach" variant="accent">
-                  Talk to your coach
-                </LinkButton>
-                <LinkButton href="/app/explore" variant="ghost">
-                  Browse programs
-                </LinkButton>
-              </div>
+        {selectedRows.map((row, i) => (
+          <HabitCard
+            key={`${row.scheduleId}:${row.task_id}:${i}`}
+            row={row}
+            done={row.status === "completed"}
+            busy={false}
+            onToggle={() => toggleTask(row)}
+            onOpen={() =>
+              setOpenTask({
+                schedule_id: row.scheduleId,
+                task_id: row.task_id,
+                title: row.title,
+                description: row.description,
+                time: row.time,
+                duration_minutes: row.duration_minutes,
+              })
             }
           />
-        )}
-
-        {/* XP / level progress + insights + held-back, stacked below */}
-        {gam ? (
-          <Card className="mt-6 p-4">
-            <div className="text-mx-muted flex justify-between text-[11px]">
-              <span>Level {gam.level ?? 1}</span>
-              <span>
-                {gam.xp_in_level ?? 0}/{gam.xp_for_next ?? 100} XP
-              </span>
-            </div>
-            <div className="bg-mx-surface mt-1.5 h-1.5 overflow-hidden rounded-full">
-              <div
-                className="bg-mx-accent h-full rounded-full"
-                style={{
-                  width: `${
-                    gam.xp_for_next
-                      ? Math.min(100, ((gam.xp_in_level ?? 0) / gam.xp_for_next) * 100)
-                      : 0
-                  }%`,
-                }}
-              />
-            </div>
-          </Card>
-        ) : null}
-
-        {data?.insights?.length ? (
-          <Card className="mt-4 p-4">
-            <div className="mx-label mb-2">Noticed</div>
-            <ul className="space-y-2">
-              {data.insights.slice(0, 3).map((ins) => (
-                <li key={ins.id} className="text-mx-ink-2 text-[13px]">
-                  {ins.text}
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ) : null}
-
-        {data?.held_back_count ? (
-          <Card className="mt-4 p-4">
-            <div className="text-mx-ink text-[14px] font-medium">
-              {data.held_back_count} held back
-            </div>
-            <p className="text-mx-muted mt-1 text-[12px]">
-              Tasks paused to keep today realistic.
-            </p>
-          </Card>
-        ) : null}
+        ))}
       </div>
 
-      <Toast toast={toast} onDismiss={() => setToast(null)} />
-      {openTask ? (
-        <TaskSheet task={openTask} onClose={() => setOpenTask(null)} />
+      {/* ── Empty: no program yet ─────────────────────────────────────────── */}
+      {activeProgramCount === 0 && !loading ? (
+        <Link
+          href="/app/explore"
+          className="text-mx-muted flex items-center justify-center gap-2.5 py-5 text-center"
+        >
+          <Icon name="explore" className="size-5" />
+          <span className="text-[13px]">
+            {primaryMaxLabel
+              ? `Ready to start on ${primaryMaxLabel}? Explore has a plan.`
+              : "Browse maxes in Explore"}
+          </span>
+        </Link>
       ) : null}
-    </div>
-  );
-}
 
-function EmptyState({
-  title,
-  body,
-  action,
-  className = "",
-}: {
-  title: string;
-  body: string;
-  action?: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`bg-mx-surface-light rounded-mx-lg flex flex-col items-center px-6 py-14 text-center ${className}`}
-    >
-      <div className="font-mx-serif text-mx-ink text-[22px]">{title}</div>
-      <p className="text-mx-muted mt-2 max-w-[360px] text-[14px]">{body}</p>
-      {action ? <div className="mt-5">{action}</div> : null}
+      <p className="text-mx-muted mx-auto mt-7 max-w-[320px] text-center text-[11px] leading-[15px]">
+        General wellness only — not medical advice. Follow routines at your own risk.
+      </p>
+
+      {openTask ? <TaskSheet task={openTask} onClose={() => setOpenTask(null)} /> : null}
     </div>
   );
 }

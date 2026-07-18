@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useMaxAuth } from "@/context/MaxAuthContext";
 import { Icon } from "./icons";
 
+// Mirrors the iOS tab bar (TabNavigator active config): Home · Planner · Scan
+// (elevated center disc) · Explore · Chat. Profile is NOT a tab — it's reached
+// via the Home-header avatar and the desktop-sidebar user chip (→ /app/you).
 const NAV = [
-  { href: "/app/today", label: "Today", icon: "today" as const },
-  { href: "/app/coach", label: "Coach", icon: "coach" as const },
+  { href: "/app/today", label: "Home", icon: "home" as const },
+  { href: "/app/planner", label: "Planner", icon: "planner" as const },
   { href: "/app/scan", label: "Scan", icon: "scan" as const },
   { href: "/app/explore", label: "Explore", icon: "explore" as const },
-  { href: "/app/you", label: "You", icon: "you" as const },
+  { href: "/app/coach", label: "Chat", icon: "chat" as const },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -22,7 +25,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, isPaid, logout } = useMaxAuth();
   const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const streak = user?.profile?.master_schedule_streak ?? user?.profile?.streak_days ?? 0;
   const initials =
@@ -77,13 +79,14 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
         <div className="mt-auto" />
 
-        {/* User chip */}
-        <div className="relative">
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            className="hover:bg-mx-surface rounded-mx-md flex w-full items-center gap-3 px-2 py-2 text-left transition"
+        {/* User chip → Profile (/app/you). Profile isn't a tab, so this is the
+            desktop entry point; the button beside it logs out. */}
+        <div className="flex items-center gap-1">
+          <Link
+            href="/app/you"
+            className="hover:bg-mx-surface rounded-mx-md flex min-w-0 flex-1 items-center gap-3 px-2 py-2 text-left transition"
           >
-            <span className="bg-mx-accent flex size-9 items-center justify-center rounded-full text-[13px] font-semibold text-white">
+            <span className="bg-mx-ink flex size-9 items-center justify-center rounded-full text-[13px] font-semibold text-white">
               {initials}
             </span>
             <span className="min-w-0 flex-1">
@@ -94,27 +97,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 {isPaid ? "Pro" : "Free"}
               </span>
             </span>
+          </Link>
+          <button
+            onClick={() => {
+              logout();
+              router.replace("/login");
+            }}
+            aria-label="Log out"
+            className="hover:bg-mx-surface text-mx-muted hover:text-mx-error rounded-mx-md flex size-9 shrink-0 items-center justify-center transition"
+          >
+            <Icon name="logout" className="size-[18px]" />
           </button>
-          {menuOpen ? (
-            <div className="border-mx-border bg-mx-card rounded-mx-md absolute bottom-full left-0 mb-2 w-full overflow-hidden border shadow-mx-md">
-              <Link
-                href="/app/you/settings"
-                onClick={() => setMenuOpen(false)}
-                className="hover:bg-mx-surface flex items-center gap-2.5 px-3 py-2.5 text-[14px]"
-              >
-                <Icon name="settings" className="size-4" /> Settings
-              </Link>
-              <button
-                onClick={() => {
-                  logout();
-                  router.replace("/login");
-                }}
-                className="hover:bg-mx-surface text-mx-error flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[14px]"
-              >
-                <Icon name="logout" className="size-4" /> Log out
-              </button>
-            </div>
-          ) : null}
         </div>
       </aside>
 

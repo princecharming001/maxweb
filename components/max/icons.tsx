@@ -3,7 +3,7 @@ export function Icon({
   name,
   className = "size-5",
 }: {
-  name: "today" | "coach" | "scan" | "explore" | "you" | "flame" | "logout" | "settings" | "check" | "chevron" | "plus" | "close" | "menu" | "x" | "trash" | "mic";
+  name: "today" | "home" | "planner" | "coach" | "chat" | "scan" | "explore" | "you" | "bell" | "flame" | "logout" | "settings" | "check" | "chevron" | "plus" | "close" | "menu" | "x" | "trash" | "mic";
   className?: string;
 }) {
   const common = {
@@ -23,10 +23,37 @@ export function Icon({
           <path d="M3 9h18M8 3v3M16 3v3M8 14l2.5 2.5L16 12" />
         </svg>
       );
+    case "home":
+      return (
+        <svg {...common}>
+          <path d="M4 11.5 12 4l8 7.5" />
+          <path d="M6 10v10h4v-6h4v6h4V10" />
+        </svg>
+      );
+    case "planner":
+      return (
+        <svg {...common}>
+          <path d="M9 4 3.5 6.2v13.8L9 17.8l6 2.2 5.5-2.2V3.8L15 6 9 4z" />
+          <path d="M9 4v13.8M15 6v14" />
+        </svg>
+      );
     case "coach":
       return (
         <svg {...common}>
           <path d="M4 5h16v11H9l-4 3v-3H4z" />
+        </svg>
+      );
+    case "chat":
+      return (
+        <svg {...common}>
+          <path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4 3v-3H5a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 5 5.5z" />
+        </svg>
+      );
+    case "bell":
+      return (
+        <svg {...common}>
+          <path d="M6 9.5a6 6 0 0 1 12 0c0 4 1.2 5.2 2 6.5H4c.8-1.3 2-2.5 2-6.5z" />
+          <path d="M10 19a2 2 0 0 0 4 0" />
         </svg>
       );
     case "scan":
