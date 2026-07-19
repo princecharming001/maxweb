@@ -21,25 +21,23 @@ const SHOWER_ICON: Record<string, string> = {
   night: "moon",
   both: "water",
 };
-const RECAP_ICON: Record<string, string> = {
-  Wake: "sun",
-  "Get ready": "water",
-  Work: "briefcase",
-  Workout: "barbell",
-  Breakfast: "cafe",
-  Lunch: "restaurant",
-  Dinner: "wine",
-  "Wind down": "moon",
-};
+/** "07:00" + 75 → "08:15" (wraps around midnight). */
+function addMin(hhmm: string, delta: number): string {
+  const m = hhmm.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return hhmm;
+  const total =
+    (((parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + delta) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
 
-function fmt12(hhmm: string): string {
+/** "07:00" → "7:00a" — the compact stamp the iOS RoutineReveal timeline uses. */
+function fmtTiny(hhmm: string): string {
   const m = hhmm.match(/^(\d{1,2}):(\d{2})/);
   if (!m) return hhmm;
   let h = parseInt(m[1], 10);
-  const min = m[2];
-  const s = h >= 12 ? "PM" : "AM";
+  const p = h >= 12 ? "p" : "a";
   h = h % 12 || 12;
-  return `${h}:${min} ${s}`;
+  return `${h}:${m[2]}${p}`;
 }
 
 interface State {
@@ -172,30 +170,27 @@ export default function SchedulePage() {
     }
   }
 
-  const recap = useMemo(() => {
-    const rows: [string, string][] = [
-      ["Wake", fmt12(s.wake)],
-      ["Get ready", fmt12(s.getReady)],
+  // First-day preview — the iOS RoutineReveal starter day, anchored to the
+  // user's answers: morning block after wake, evening block before sleep
+  // (sleep = wind down + 1h). With the defaults this reproduces the iOS
+  // screen verbatim: 7:00a … 8:15a/8:35a/8:55a · 9:45p/10:05p/10:25p · 11:00p.
+  const sampleDay = useMemo<
+    { time: string; title: string; sub?: string; anchor?: boolean }[]
+  >(() => {
+    const sleep = addMin(s.windDown, 60);
+    return [
+      { time: fmtTiny(s.wake), title: "Wake", anchor: true },
+      { time: fmtTiny(addMin(s.wake, 75)), title: "morning skincare", sub: "cleanse, treat, SPF" },
+      { time: fmtTiny(addMin(s.wake, 95)), title: "protein breakfast", sub: "fuel + recovery" },
+      { time: fmtTiny(addMin(s.wake, 115)), title: "scalp massage", sub: "stimulate the follicles" },
+      { time: fmtTiny(addMin(sleep, -75)), title: "evening skincare", sub: "repair while you sleep" },
+      { time: fmtTiny(addMin(sleep, -55)), title: "strength session", sub: "progressive overload" },
+      { time: fmtTiny(addMin(sleep, -35)), title: "scalp serum", sub: "consistency compounds" },
+      { time: fmtTiny(sleep), title: "Sleep", anchor: true },
     ];
-    if (s.works) rows.push(["Work", `${fmt12(s.workStart)} – ${fmt12(s.workEnd)}`]);
-    if (!s.skipBreakfast) rows.push(["Breakfast", fmt12(s.breakfast)]);
-    rows.push(["Workout", fmt12(s.workout)]);
-    if (!s.skipLunch) rows.push(["Lunch", fmt12(s.lunch)]);
-    if (!s.skipDinner) rows.push(["Dinner", fmt12(s.dinner)]);
-    rows.push(["Wind down", fmt12(s.windDown)]);
-    return rows.sort((a, b) => {
-      const t = (x: string) => {
-        const m = x.match(/(\d+):(\d+)\s*(AM|PM)/);
-        if (!m) return 0;
-        let h = parseInt(m[1]) % 12;
-        if (m[3] === "PM") h += 12;
-        return h * 60 + parseInt(m[2]);
-      };
-      return t(a[1]) - t(b[1]);
-    });
-  }, [s]);
+  }, [s.wake, s.windDown]);
 
-  const META: Record<StepId, { title: string; sub: string }> = {
+  const META: Record<Exclude<StepId, "recap">, { title: string; sub: string }> = {
     day: { title: "The shape of\nyour day", sub: "Max builds around your real hours, not over them." },
     work: { title: "Work or\nschool?", sub: "So nothing ever gets scheduled over it." },
     where: { title: "Where do\nyou work?", sub: "Your commute becomes real protected time, not a guess." },
@@ -203,7 +198,6 @@ export default function SchedulePage() {
     workout: { title: "When do you\nwork out?", sub: "So things land when they actually happen." },
     weekends: { title: "Weekends?", sub: "Do you keep the same schedule, or shift things later?" },
     shower: { title: "When do you\nusually shower?", sub: "So Max anchors your skin and hygiene routines at the right time." },
-    recap: { title: "Here's\nyour day", sub: "Max fits your routines into the gaps. You can drag any of this later in Plan." },
   };
 
   const isRecap = step === "recap";
@@ -213,7 +207,16 @@ export default function SchedulePage() {
       <FunnelHeader progress={progress} showBack onBack={back} />
 
       <div className="mt-12 flex flex-1 flex-col justify-center">
-        <StepHead title={META[step].title} sub={META[step].sub} />
+        {step === "recap" ? (
+          // iOS RoutineReveal headline — left-aligned serif, "first" in italic.
+          <h1 className="font-mx-serif text-mx-ink text-[36px] font-normal leading-[42px] tracking-[-0.8px]">
+            Here&apos;s your
+            <br />
+            <em>first</em> day
+          </h1>
+        ) : (
+          <StepHead title={META[step].title} sub={META[step].sub} />
+        )}
 
         <div className="mt-8">
           {step === "day" && (
@@ -339,22 +342,35 @@ export default function SchedulePage() {
 
           {step === "recap" && (
             <>
-              <div className="overflow-hidden rounded-mx-xl bg-white shadow-mx-md">
-                {recap.map(([label, val], i) => (
-                  <div
-                    key={label}
-                    className={`flex items-center gap-3.5 px-[18px] py-[15px] ${i > 0 ? "border-t border-mx-border" : ""}`}
-                  >
-                    <span className="w-6 shrink-0 text-mx-muted">
-                      <Icon name={RECAP_ICON[label] ?? "sun"} size={17} />
+              {/* iOS RoutineReveal timeline card — time · dot · bold title +
+                  muted sub; Wake/Sleep endpoints muted with lighter dots. */}
+              <div className="rounded-mx-2xl bg-white px-5 py-[18px] shadow-mx-md">
+                {sampleDay.map((t) => (
+                  <div key={t.title} className="flex items-start gap-3.5 py-[11px]">
+                    <span className="w-[54px] shrink-0 pt-[2px] text-[13.5px] font-medium tabular-nums text-mx-muted">
+                      {t.time}
                     </span>
-                    <span className="flex-1 text-[15.5px] text-[#6b6b6b]">{label}</span>
-                    <span className="text-[15.5px] font-medium text-mx-ink tabular-nums">{val}</span>
+                    <span
+                      className={`mt-[8px] size-[7px] shrink-0 rounded-full ${t.anchor ? "bg-[#d3d2ce]" : "bg-mx-ink"}`}
+                    />
+                    {t.anchor ? (
+                      <span className="text-[16.5px] leading-[22px] text-mx-muted">{t.title}</span>
+                    ) : (
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[16px] font-semibold leading-[22px] tracking-[-0.1px] text-mx-ink">
+                          {t.title}
+                        </span>
+                        <span className="block text-[13.5px] leading-[19px] text-mx-muted">
+                          {t.sub}
+                        </span>
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
-              <p className="mx-auto mt-4 max-w-[320px] text-center text-[11px] leading-[15px] text-mx-muted">
-                General wellness only — not medical advice. Follow routines at your own risk.
+              <p className="mx-auto mt-5 max-w-[400px] text-center text-[14.5px] leading-[21px] text-mx-muted">
+                Just a taste. Pick your maxes in Explore and Max builds the real
+                plan around your day.
               </p>
             </>
           )}
@@ -362,12 +378,17 @@ export default function SchedulePage() {
       </div>
 
       <div className="pt-6">
-        {step !== "weekends" && step !== "shower" ? (
-          <ContinueButton
-            label={isRecap ? "Build my day" : "Continue"}
+        {isRecap ? (
+          // Full-width black pill, exactly like the iOS reveal CTA.
+          <button
             onClick={next}
-            loading={saving}
-          />
+            disabled={saving}
+            className="flex h-14 w-full items-center justify-center rounded-full bg-mx-ink text-[16px] font-semibold tracking-[0.2px] text-white shadow-mx-md transition disabled:bg-[#dad9d6] disabled:text-[#a4a29d] disabled:shadow-none"
+          >
+            {saving ? "…" : "Looks right"}
+          </button>
+        ) : step !== "weekends" && step !== "shower" ? (
+          <ContinueButton label="Continue" onClick={next} loading={saving} />
         ) : (
           <div className="h-14" />
         )}

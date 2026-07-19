@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/max/api";
 import { loadAnswers, saveAnswers } from "@/lib/max/onboarding";
-import { Button } from "@/components/max/ui";
 import CameraCapture, { type Captured } from "@/components/max/scan/CameraCapture";
 
 /** ScanOffer — mirrors the iOS "TOTALLY OPTIONAL / A face scan tunes your plan"
@@ -56,24 +55,38 @@ export default function StartScanPage() {
     );
   }
 
+  // iOS ScanOffer verbatim: left-aligned kicker/serif/sub weighted into the
+  // lower half of the screen (big top whitespace), black + white pill pair.
   return (
-    <div className="flex min-h-[86vh] flex-col items-center justify-center text-center">
-      <div className="mx-label text-mx-ink">Totally optional</div>
-      <h1 className="font-mx-serif text-mx-ink mt-4 text-[30px] leading-[1.15] whitespace-pre-line">
-        {"A face scan tunes\nyour plan"}
-      </h1>
-      <p className="max-w-[360px] mt-3 text-[15px] leading-relaxed text-[#6b6b6b]">
-        It rates where you are today and sharpens the skin and jaw parts of your
-        routine. Skip it and your plan still works.
-      </p>
-      <div className="mt-8 w-full max-w-[320px] space-y-3">
-        <Button full size="lg" onClick={() => setMode("capture")}>
-          Scan now
-        </Button>
-        <button onClick={skip} className="text-mx-muted w-full text-[14px]">
-          Skip for now
-        </button>
+    <div className="flex min-h-[86vh] flex-col">
+      <div className="flex-[1.1]" />
+      <div>
+        <div className="mx-label text-mx-ink">TOTALLY OPTIONAL</div>
+        <h1 className="font-mx-serif text-mx-ink mt-2 text-[36px] font-normal leading-[42px] tracking-[-0.8px]">
+          A face scan tunes
+          <br />
+          your plan
+        </h1>
+        <p className="mt-3 text-[15px] leading-[22px] text-[#6b6b6b]">
+          It sharpens the skin and jaw parts of your routine. Do it later or
+          never. Your plan works either way.
+        </p>
+        <div className="mt-7 flex flex-col gap-2.5">
+          <button
+            onClick={() => setMode("capture")}
+            className="flex h-14 w-full items-center justify-center rounded-full bg-mx-ink text-[16px] font-semibold tracking-[0.2px] text-white shadow-mx-md transition"
+          >
+            Scan now
+          </button>
+          <button
+            onClick={skip}
+            className="flex h-14 w-full items-center justify-center rounded-full border border-mx-border bg-white text-[16px] font-semibold tracking-[0.2px] text-mx-ink shadow-mx-md transition"
+          >
+            Skip for now
+          </button>
+        </div>
       </div>
+      <div className="flex-1" />
     </div>
   );
 }
