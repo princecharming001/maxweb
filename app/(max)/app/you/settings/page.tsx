@@ -7,145 +7,233 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/max/api";
 import { useMaxAuth } from "@/context/MaxAuthContext";
 import SubPageHeader from "@/components/max/SubPageHeader";
-import { Button, Card, Input } from "@/components/max/ui";
+import { Button, Input } from "@/components/max/ui";
 import { Icon } from "@/components/max/icons";
 
-/** Settings — sectioned menu mirroring iOS SettingsScreen. Coaching tone +
- *  response length intentionally live in the chat drawer, not here. */
+/** Canonical support contact — mirrors iOS legalConstants.LEGAL_SUPPORT_EMAIL. */
+const SUPPORT_EMAIL = "mog.max123@gmail.com";
+
+/** Same set + order as iOS LEGAL_ROWS. */
+const LEGAL_ROWS = [
+  { href: "/legal/privacy", label: "Privacy policy" },
+  { href: "/legal/terms", label: "Terms of service" },
+  { href: "/legal/community-guidelines", label: "Community guidelines" },
+  { href: "/legal/cookies", label: "Cookie notice" },
+];
+
+/** Settings — mirrors iOS SettingsScreen: borderless sections (label + rows
+ *  with hairline dividers, no cards), serif header, version footer. Coaching
+ *  tone + response length intentionally live in the chat drawer, not here.
+ *  "Rate us on the App Store" is iOS-only and stays off the web build. */
 export default function SettingsPage() {
   const { user, isPaid, logout, deleteAccount } = useMaxAuth();
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const isOAuth = user?.auth_provider && user.auth_provider !== "password";
+  const isOAuth = !!user?.auth_provider && user.auth_provider !== "password";
 
   const googleQ = useQuery({
     queryKey: ["googleStatus"],
     queryFn: () => api.getGoogleStatus(),
+    staleTime: 60_000,
   });
-  const showCalendar = !!(googleQ.data as { calendar_link_enabled?: boolean })?.calendar_link_enabled;
+  const showCalendar = googleQ.data?.calendar_link_enabled === true;
+
+  function confirmSignOut() {
+    // iOS uses window.confirm on its web build for the same dialog.
+    if (window.confirm("Sign out?")) {
+      logout();
+      router.replace("/login");
+    }
+  }
 
   async function doDelete() {
+    // Google/OAuth accounts have no password — authorize via session instead.
+    if (!isOAuth && !password.trim()) {
+      alert("Enter your password to delete your account.");
+      return;
+    }
+    setBusy(true);
     try {
-      await deleteAccount(isOAuth ? undefined : password);
+      await deleteAccount(isOAuth ? undefined : password.trim());
+      setPassword("");
+      setConfirming(false);
       router.replace("/");
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      alert(detail || "Couldn't delete the account.");
+      alert(detail || "Could not delete account");
+    } finally {
+      setBusy(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-[560px]">
+    <div className="mx-auto max-w-[460px]">
       <SubPageHeader title="Settings" />
 
+      {/* ── Membership ─────────────────────────────────────────── */}
       {isPaid ? (
         <Group title="Membership">
-          <Row href="/app/you/subscription" label="Manage subscription" />
+          <LinkRow href="/app/you/subscription" label="Manage subscription" hint="Manage your plan" />
         </Group>
       ) : null}
 
+      {/* ── Coaching ───────────────────────────────────────────── */}
       <Group title="Coaching">
-        <Row href="/app/you/lifestyle" label="Edit lifestyle" sub="Your goals & habits" />
-        <Row href="/app/you/products" label="My products" />
-        {showCalendar ? <Row href="/app/you/settings" label="Google Calendar" /> : null}
+        <LinkRow href="/app/you/lifestyle" label="Edit lifestyle" hint="Your goals & habits" />
+        <LinkRow href="/app/you/products" label="My products" />
+        {showCalendar ? (
+          <LinkRow
+            href="/app/you/settings"
+            label="Google Calendar"
+            hint={googleQ.data?.connected ? "Connected" : "Link your calendar"}
+          />
+        ) : null}
       </Group>
 
+      {/* ── Profile ────────────────────────────────────────────── */}
       <Group title="Profile">
-        <Row href="/app/you/personal" label="Edit personal info" />
+        <LinkRow href="/app/you/personal" label="Edit personal info" />
       </Group>
 
+      {/* ── Support ────────────────────────────────────────────── */}
       <Group title="Support">
-        <RowExternal href="mailto:hello@usemaxapp.com" label="Contact support" />
-        <Row href="/legal/privacy" label="Privacy policy" />
-        <Row href="/legal/terms" label="Terms of service" />
+        <a
+          href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Max support")}`}
+          className="transition-opacity hover:opacity-60"
+        >
+          <RowShell
+            label="Contact support"
+            hint={SUPPORT_EMAIL}
+            trailing={
+              /* open-outline equivalent, 14px at 40% like iOS */
+              <svg
+                viewBox="0 0 24 24"
+                className="text-mx-muted size-3.5 shrink-0 opacity-40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14 4h6v6M20 4l-9 9M18 13v6a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8a1.5 1.5 0 0 1 1.5-1.5H11" />
+              </svg>
+            }
+          />
+        </a>
+        {LEGAL_ROWS.map((row) => (
+          <LinkRow key={row.href} href={row.href} label={row.label} />
+        ))}
       </Group>
 
-      {/* Account & Data */}
-      <div className="mt-8">
-        <div className="mx-label mb-2">Account &amp; Data</div>
-        <div className="overflow-hidden rounded-mx-lg border border-mx-border">
-          <button
-            onClick={() => {
-              logout();
-              router.replace("/login");
-            }}
-            className="hover:bg-mx-surface flex w-full items-center justify-between px-4 py-3.5 text-left"
-          >
-            <span className="text-mx-ink text-[15px]">Sign out</span>
-            <Icon name="logout" className="text-mx-muted size-4" />
-          </button>
-          <button
-            onClick={() => setConfirming(true)}
-            className="border-mx-border hover:bg-mx-surface flex w-full items-center justify-between border-t px-4 py-3.5 text-left"
-          >
-            <span className="text-mx-error text-[15px]">Delete account</span>
-          </button>
-        </div>
-      </div>
+      {/* ── Account & Data ─────────────────────────────────────── */}
+      <Group title="Account & Data">
+        <button type="button" onClick={confirmSignOut} className="w-full text-left transition-opacity hover:opacity-60">
+          {/* iOS: secondary ink, no chevron / no icon */}
+          <RowShell label="Sign out" labelClassName="text-mx-ink-2" trailing={null} />
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="w-full text-left transition-opacity hover:opacity-60"
+        >
+          <RowShell
+            label="Delete account"
+            hint="Permanently erase your account and data"
+            labelClassName="text-[#D7263D]"
+            trailing={<Icon name="trash" className="size-4 shrink-0 text-[#D7263D] opacity-70" />}
+          />
+        </button>
+      </Group>
 
-      <p className="text-mx-muted mt-6 text-center text-[12px]">Max · web</p>
+      {/* Version footer — iOS shows `v{version} ({build})` */}
+      <p className="text-mx-muted mt-12 text-center text-[11px] tracking-[0.3px] opacity-45">v0.1.0 · web</p>
+      <div className="h-10" />
 
+      {/* ── Delete modal ───────────────────────────────────────── */}
       {confirming ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/40" onClick={() => setConfirming(false)} />
-          <Card className="relative w-full max-w-[360px] p-5">
-            <p className="text-mx-ink text-[15px] font-semibold">Delete your account?</p>
-            <p className="text-mx-muted mt-1 text-[13px]">
-              This permanently removes your plan, scans, and progress.
+          <div className="bg-mx-card border-mx-border shadow-mx-sm relative w-full max-w-[380px] rounded-mx-xl border p-8">
+            <p className="font-mx-serif text-mx-ink text-[20px]">Delete account</p>
+            <p className="text-mx-ink-2 mt-2 text-[14px] leading-5">
+              This permanently removes your account and all personal data. This cannot be undone.
             </p>
             {!isOAuth ? (
-              <div className="mt-3">
+              <div className="mt-6">
                 <Input
                   type="password"
-                  placeholder="Confirm your password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={busy}
+                  autoCapitalize="none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void doDelete();
+                  }}
                 />
               </div>
             ) : null}
-            <div className="mt-4 flex gap-2">
-              <Button variant="danger" size="sm" onClick={doDelete}>
-                Delete permanently
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setConfirming(false)}>
+            <div className="mt-8 flex items-center justify-end gap-4">
+              <Button variant="ghost" size="sm" onClick={() => setConfirming(false)} disabled={busy}>
                 Cancel
               </Button>
+              <Button variant="danger" size="sm" onClick={() => void doDelete()} disabled={busy}>
+                {busy ? "Deleting…" : "Delete"}
+              </Button>
             </div>
-          </Card>
+          </div>
         </div>
       ) : null}
     </div>
   );
 }
 
+/* ── Primitives — iOS parity: no cards, label + rows + hairline dividers ── */
+
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-6">
-      <div className="mx-label mb-2">{title}</div>
-      <div className="overflow-hidden rounded-mx-lg border border-mx-border [&>*+*]:border-mx-border [&>*+*]:border-t">
-        {children}
+    <section className="mt-8">
+      <div className="mx-label mb-1">{title}</div>
+      {children}
+    </section>
+  );
+}
+
+/** Row body: 15px label + 12px hint, hairline bottom divider, default 16px
+ *  chevron at 40% — matches iOS `st.row` exactly. */
+function RowShell({
+  label,
+  hint,
+  trailing,
+  labelClassName = "text-mx-ink",
+}: {
+  label: string;
+  hint?: string;
+  trailing?: React.ReactNode;
+  labelClassName?: string;
+}) {
+  return (
+    <div className="border-mx-border-light flex items-center border-b py-[15px]">
+      <div className="min-w-0 flex-1">
+        <div className={`text-[15px] ${labelClassName}`}>{label}</div>
+        {hint ? <div className="text-mx-muted mt-[2px] text-[12px]">{hint}</div> : null}
       </div>
+      {trailing === undefined ? (
+        <Icon name="chevron" className="text-mx-muted size-4 shrink-0 opacity-40" />
+      ) : (
+        trailing
+      )}
     </div>
   );
 }
-function Row({ href, label, sub }: { href: string; label: string; sub?: string }) {
+
+function LinkRow({ href, label, hint }: { href: string; label: string; hint?: string }) {
   return (
-    <Link href={href} className="hover:bg-mx-surface flex items-center justify-between px-4 py-3.5 transition">
-      <div>
-        <div className="text-mx-ink text-[15px]">{label}</div>
-        {sub ? <div className="text-mx-muted text-[13px]">{sub}</div> : null}
-      </div>
-      <Icon name="chevron" className="text-mx-muted size-4" />
+    <Link href={href} className="block transition-opacity hover:opacity-60">
+      <RowShell label={label} hint={hint} />
     </Link>
-  );
-}
-function RowExternal({ href, label }: { href: string; label: string }) {
-  return (
-    <a href={href} className="hover:bg-mx-surface flex items-center justify-between px-4 py-3.5 transition">
-      <span className="text-mx-ink text-[15px]">{label}</span>
-      <Icon name="chevron" className="text-mx-muted size-4" />
-    </a>
   );
 }

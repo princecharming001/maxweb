@@ -66,14 +66,71 @@ export function extractVisualBlocks(text: string): {
 
 function Title({ title }: { title?: unknown }) {
   if (!title || typeof title !== "string") return null;
-  return <div className="text-mx-ink mb-2 text-[13px] font-semibold">{title}</div>;
+  // iOS blockTitle: Matter-SemiBold 13.5, ink, letterSpacing 0.2, mb 8.
+  return (
+    <div className="text-mx-ink mb-2 text-[13.5px] font-semibold tracking-[0.2px]">
+      {title}
+    </div>
+  );
 }
 
+// iOS card: WHITE ground (not gray), radius 14 continuous, padding 12, hairline.
 function CardWrap({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-mx-surface-light rounded-mx-md border border-mx-border mt-2 p-3.5">
+    <div className="bg-mx-card rounded-mx-md border border-mx-border mt-2 p-3">
       {children}
     </div>
+  );
+}
+
+/* ── SVG stand-ins for the Ionicons the iOS renderer uses (no emojis). ────── */
+
+// Ionicons add-circle / remove-circle: filled disc, white +/− glyph.
+function CircleGlyph({ minus, className }: { minus?: boolean; className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden="true">
+      <circle cx="8" cy="8" r="7" fill="currentColor" />
+      <path d="M4.7 8h6.6" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" fill="none" />
+      {!minus ? (
+        <path d="M8 4.7v6.6" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" fill="none" />
+      ) : null}
+    </svg>
+  );
+}
+
+// Ionicons arrow-down: stem + chevron head.
+function ArrowDownGlyph({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M8 2.8v10.4M3.9 9.4 8 13.4l4.1-4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// Ionicons checkmark-circle (filled, white check) / ellipse-outline (thin ring).
+function CheckGlyph({ done, className }: { done?: boolean; className?: string }) {
+  return done ? (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden="true">
+      <circle cx="8" cy="8" r="7" fill="currentColor" />
+      <path
+        d="M4.9 8.4 7 10.5l4.2-5"
+        stroke="#fff"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden="true">
+      <circle cx="8" cy="8" r="6.9" fill="none" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
   );
 }
 
@@ -84,30 +141,35 @@ export function VisualBlockRenderer({ block }: { block: VisualBlock }) {
     case "table": {
       const columns = (data.columns as string[]) ?? [];
       const rows = (data.rows as string[][]) ?? [];
-      if (!rows.length) return null;
+      if (!columns.length || !rows.length) return null;
+      // iOS: ink SEMIBOLD headers (not muted) over a 0.14 hairline, zebra rows
+      // (no per-row borders), 12.5px text, body cells in secondary ink.
       return (
         <CardWrap>
           <Title title={block.title} />
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[13px]">
+            <table className="w-full border-collapse text-[12.5px]">
               <thead>
-                <tr className="border-mx-border border-b">
+                <tr className="border-b border-black/[0.14]">
                   {columns.map((c, i) => (
                     <th
                       key={i}
-                      className="text-mx-muted px-2 py-1.5 text-left font-medium"
+                      className={`${i === 0 ? "min-w-[96px]" : "min-w-[84px]"} text-mx-ink px-2 pt-0 pb-1.5 text-left font-semibold`}
                     >
                       {c}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="[&>tr:first-child>td]:pt-[9px]">
                 {rows.map((r, ri) => (
-                  <tr key={ri} className="border-mx-border/60 border-b last:border-0">
-                    {r.map((cell, ci) => (
-                      <td key={ci} className="text-mx-ink px-2 py-1.5">
-                        {cell}
+                  <tr key={ri} className="even:bg-black/[0.02]">
+                    {columns.map((_, ci) => (
+                      <td
+                        key={ci}
+                        className={`${ci === 0 ? "min-w-[96px]" : "min-w-[84px]"} text-mx-ink-2 px-2 py-[5px]`}
+                      >
+                        {r[ci] ?? ""}
                       </td>
                     ))}
                   </tr>
@@ -126,22 +188,27 @@ export function VisualBlockRenderer({ block }: { block: VisualBlock }) {
       return (
         <CardWrap>
           <Title title={block.title} />
-          <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, minmax(0,1fr))` }}>
+          {/* iOS: flexed columns, px 8 each, hairline divider from col 2 on;
+              filled add/remove-circle icons; pros in ink, cons in secondary. */}
+          <div className="grid" style={{ gridTemplateColumns: `repeat(${Math.min(options.length, 3)}, minmax(0,1fr))` }}>
             {options.slice(0, 3).map((o, i) => (
-              <div key={i} className="min-w-0">
+              <div
+                key={i}
+                className={`min-w-0 px-2 ${i > 0 ? "border-mx-border border-l" : ""}`}
+              >
                 <div className="text-mx-ink mb-1.5 text-[13px] font-semibold">
                   {o.name ?? `Option ${i + 1}`}
                 </div>
                 {(o.pros ?? []).map((p, pi) => (
-                  <div key={`p${pi}`} className="text-mx-ink-2 flex gap-1.5 text-[12px]">
-                    <span className="text-mx-success">+</span>
-                    {p}
+                  <div key={`p${pi}`} className="mb-1 flex items-start gap-[5px] text-[12px] leading-4">
+                    <CircleGlyph className="text-mx-success mt-[1.5px] size-[13px] shrink-0" />
+                    <span className="text-mx-ink min-w-0 flex-1">{p}</span>
                   </div>
                 ))}
                 {(o.cons ?? []).map((c, ci) => (
-                  <div key={`c${ci}`} className="text-mx-muted flex gap-1.5 text-[12px]">
-                    <span>–</span>
-                    {c}
+                  <div key={`c${ci}`} className="mb-1 flex items-start gap-[5px] text-[12px] leading-4">
+                    <CircleGlyph minus className="text-mx-muted mt-[1.5px] size-[13px] shrink-0" />
+                    <span className="text-mx-ink-2 min-w-0 flex-1">{c}</span>
                   </div>
                 ))}
               </div>
@@ -156,21 +223,25 @@ export function VisualBlockRenderer({ block }: { block: VisualBlock }) {
       return (
         <CardWrap>
           <Title title={block.title} />
-          <div className="relative">
+          {/* iOS: 18px centered rail, 9px GOLD dot (#C29A4E — not the blue
+              accent), 2px hairline spine, body pl 4 / pb 12 on every row. */}
+          <div>
             {steps.map((st, i) => (
-              <div key={i} className="flex gap-3 pb-3 last:pb-0">
-                <div className="relative flex flex-col items-center">
-                  <span className="bg-mx-accent mt-1 size-2.5 rounded-full" />
+              <div key={i} className="flex">
+                <div className="flex w-[18px] shrink-0 flex-col items-center">
+                  <span className="mt-[3px] size-[9px] shrink-0 rounded-full bg-[#C29A4E]" />
                   {i < steps.length - 1 ? (
-                    <span className="bg-mx-border w-px flex-1" />
+                    <span className="bg-mx-border mt-[2px] w-[2px] flex-1" />
                   ) : null}
                 </div>
-                <div>
-                  <div className="text-mx-ink text-[13px] font-medium">
+                <div className="min-w-0 flex-1 pb-3 pl-1">
+                  <div className="text-mx-ink text-[13px] font-semibold">
                     {st.label}
                   </div>
                   {st.detail ? (
-                    <div className="text-mx-muted text-[12px]">{st.detail}</div>
+                    <div className="text-mx-ink-2 mt-0.5 text-[12.5px] leading-[17px]">
+                      {st.detail}
+                    </div>
                   ) : null}
                 </div>
               </div>
@@ -186,16 +257,20 @@ export function VisualBlockRenderer({ block }: { block: VisualBlock }) {
       return (
         <CardWrap>
           <Title title={block.title} />
+          {/* iOS: #F6F5F2 chip (radius 10, py 9 / px 12), CENTERED semibold
+              label + 11.5px muted note, arrow-down icon between nodes. */}
           {steps.map((st, i) => (
             <div key={i}>
-              <div className="bg-mx-card rounded-mx-sm border border-mx-border px-3 py-2">
-                <div className="text-mx-ink text-[13px] font-medium">{st.label}</div>
+              <div className="rounded-mx-sm border-mx-border border bg-[#F6F5F2] px-3 py-[9px] text-center">
+                <div className="text-mx-ink text-[13px] font-semibold">{st.label}</div>
                 {st.note ? (
-                  <div className="text-mx-muted text-[12px]">{st.note}</div>
+                  <div className="text-mx-muted mt-0.5 text-[11.5px]">{st.note}</div>
                 ) : null}
               </div>
               {i < steps.length - 1 ? (
-                <div className="text-mx-muted py-1 text-center text-[13px]">↓</div>
+                <div className="text-mx-muted flex justify-center py-0.5">
+                  <ArrowDownGlyph className="size-[15px]" />
+                </div>
               ) : null}
             </div>
           ))}
@@ -206,19 +281,23 @@ export function VisualBlockRenderer({ block }: { block: VisualBlock }) {
       const cards =
         (data.cards as { value?: string; label?: string; hint?: string }[]) ?? [];
       if (!cards.length) return null;
+      // iOS: NO opaque card — a vertical stack (gap 7) of one-line liquid-glass
+      // pills (radius 13, py 9 / px 14) floating on the white chat surface.
+      // Value leads at 16px/700 tabular-nums in CHAT ink #0D0D0D; the label
+      // trails at 14px #8E8E93, baseline-aligned, single line.
       return (
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <div className="mt-2 flex flex-col gap-[7px]">
           {cards.slice(0, 4).map((c, i) => (
             <div
               key={i}
-              className="bg-mx-surface-light rounded-mx-md border border-mx-border flex items-baseline gap-2 px-3.5 py-2.5"
+              className="flex items-baseline gap-2.5 rounded-[13px] border border-white/60 bg-[rgba(246,247,251,0.78)] px-3.5 py-[9px] shadow-[0_10px_24px_rgba(58,51,88,0.14)] backdrop-blur-md"
             >
-              <span className="text-mx-ink text-[18px] font-semibold">
+              <span className="whitespace-nowrap text-[16px] font-bold tracking-[-0.2px] text-[#0D0D0D] tabular-nums">
                 {c.value}
               </span>
-              <span className="text-mx-muted text-[12px]">
+              <span className="min-w-0 flex-1 truncate text-[14px] text-[#8E8E93]">
                 {c.label}
-                {c.hint ? ` · ${c.hint}` : ""}
+                {c.hint ? ` · ${c.hint}` : ""}
               </span>
             </div>
           ))}
@@ -234,16 +313,17 @@ export function VisualBlockRenderer({ block }: { block: VisualBlock }) {
       return (
         <CardWrap>
           <Title title={block.title} />
+          {/* iOS: 17px checkmark-circle (green, filled, white check) when done,
+              thin muted outline ring otherwise; gap 9, py 4. */}
           {items.map((it, i) => (
-            <div key={i} className="flex items-center gap-2 py-0.5">
-              <span
-                className={`inline-block size-3.5 rounded-full border ${
-                  it.done
-                    ? "border-mx-success bg-mx-success"
-                    : "border-mx-muted"
-                }`}
+            <div key={i} className="flex items-center gap-[9px] py-1">
+              <CheckGlyph
+                done={!!it.done}
+                className={`size-[17px] shrink-0 ${it.done ? "text-mx-success" : "text-mx-muted"}`}
               />
-              <span className="text-mx-ink text-[13px]">{it.text}</span>
+              <span className="text-mx-ink min-w-0 flex-1 text-[13px] leading-[18px]">
+                {it.text}
+              </span>
             </div>
           ))}
         </CardWrap>

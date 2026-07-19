@@ -1,17 +1,18 @@
 "use client";
 
 /**
- * Chat sidebar — the web port of the iOS ChatConversationsDrawer. A left
- * slide-over panel over a full-screen overlay: serif "Max" + close, "New chat",
- * the recent-conversation list (rename / delete), and the coach persona + length
- * controls (reused CoachPicker). The iOS drawer is a floating glass panel; on
- * web it's a solid slide-over opened by the header hamburger.
+ * Chat sidebar — the web port of the iOS ChatConversationsDrawer. Matches the
+ * app's floating liquid-glass panel: NO backdrop dim (tap-out still closes),
+ * a rounded-30 light-glass card floating from the top-left (360pt — the iOS
+ * source's own web width), content-hugging height with the recent list capped
+ * at 240px, serif "Max" header, "New chat" row, conversation rows with an
+ * always-visible trash affordance (double-click = iOS long-press rename), and
+ * the coach persona + length controls stacked at the bottom (CoachPicker).
  */
 
 import { useCallback, useEffect, useState } from "react";
 import type { ChatConversation } from "@/lib/max/api";
 import { Icon } from "@/components/max/icons";
-import { ChatIcon } from "./chatIcons";
 import { Spinner } from "@/components/max/ui";
 import CoachPicker from "./CoachPicker";
 
@@ -85,29 +86,29 @@ export default function ChatDrawer({
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Overlay */}
+      {/* iOS: opening the drawer must NOT dim the screen — only the panel is
+          glass. This layer is a transparent tap-out catcher. */}
+      <div className="absolute inset-0" onClick={onClose} aria-label="Close" />
+
+      {/* Floating liquid-glass panel (iOS drawerShadow + drawerClip +
+          LiquidGlassFill): left 10 / top 10, radius 30, luminous rim, soft
+          drop shadow, light frosted material, content-hugging height. */}
       <div
-        className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${shown ? "opacity-100" : "opacity-0"}`}
-        onClick={onClose}
-        aria-label="Close"
-      />
-      {/* Slide-over panel */}
-      <div
-        className={`bg-mx-bg absolute inset-y-0 left-0 flex w-[320px] max-w-[86vw] flex-col p-4 shadow-xl transition-transform duration-200 ease-out ${
-          shown ? "translate-x-0" : "-translate-x-full"
+        className={`absolute left-2.5 top-2.5 flex max-h-[calc(100dvh-20px)] w-[360px] max-w-[86vw] flex-col overflow-hidden rounded-[30px] border border-white/75 bg-[#f8f8fa]/90 px-4 pb-4 pt-6 shadow-[4px_10px_26px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition-transform duration-200 ease-out supports-[backdrop-filter]:bg-white/60 ${
+          shown ? "translate-x-0" : "-translate-x-[calc(100%+38px)]"
         }`}
       >
         {/* Header */}
-        <div className="mb-3.5 flex items-center justify-between">
+        <div className="mb-3.5 flex shrink-0 items-center justify-between">
           <span className="font-mx-serif text-mx-ink text-[26px] leading-none tracking-[-0.4px]">
             Max
           </span>
           <button
             onClick={onClose}
             aria-label="Close chat list"
-            className="bg-mx-surface text-mx-ink-2 hover:text-mx-ink flex size-7 items-center justify-center rounded-full transition"
+            className="text-mx-ink/55 hover:text-mx-ink flex size-7 items-center justify-center rounded-full bg-white/40 transition"
           >
-            <Icon name="x" className="size-4" />
+            <Icon name="x" className="size-[18px]" />
           </button>
         </div>
 
@@ -115,28 +116,29 @@ export default function ChatDrawer({
         <button
           onClick={onNewChat}
           disabled={creating}
-          className="border-mx-border bg-mx-surface text-mx-ink hover:bg-mx-surface-light rounded-mx-md mb-3.5 flex h-[38px] items-center justify-center gap-1.5 border text-[13px] font-semibold transition disabled:opacity-60"
+          className="rounded-mx-sm text-mx-ink mb-3.5 flex h-[38px] shrink-0 items-center justify-center gap-1.5 border border-black/[0.13] bg-white/40 text-[13px] font-semibold transition hover:bg-white/[0.58] disabled:opacity-60"
         >
           {creating ? (
             <Spinner className="size-4" />
           ) : (
             <>
-              <Icon name="plus" className="size-4" /> New chat
+              <Icon name="plus" className="size-[15px]" /> New chat
             </>
           )}
         </button>
 
-        {/* Recent — fills available space, scrolls internally */}
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <div className="mx-label mb-2">Recent</div>
-          <div className="h-full space-y-0.5 overflow-y-auto pb-2">
+        {/* Recent — iOS caps this at 240px so the panel hugs its content and a
+            long history scrolls inside instead of stretching the panel. */}
+        <div className="flex max-h-[240px] min-h-0 flex-col">
+          <div className="mx-label mb-2 shrink-0">Recent</div>
+          <div className="min-h-0 space-y-0.5 overflow-y-auto pb-3">
             {loading && conversations.length === 0 ? (
               <div className="pt-3">
                 <Spinner className="size-4" />
               </div>
             ) : null}
             {!loading && conversations.length === 0 ? (
-              <p className="text-mx-muted mt-2 text-[12px] tracking-wide">no chats yet</p>
+              <p className="text-mx-ink/35 mt-2 text-[12px] tracking-[0.2px]">no chats yet</p>
             ) : null}
             {conversations.map((c) => {
               const isActive = c.id === activeId;
@@ -144,8 +146,8 @@ export default function ChatDrawer({
               return (
                 <div
                   key={c.id}
-                  className={`group flex items-center rounded-mx-sm px-2.5 py-2 transition ${
-                    isActive ? "bg-mx-surface" : "hover:bg-mx-surface"
+                  className={`flex items-center rounded-lg px-2.5 py-[9px] transition ${
+                    isActive ? "bg-white/[0.58]" : "hover:bg-white/40"
                   }`}
                 >
                   {isRenaming ? (
@@ -163,39 +165,32 @@ export default function ChatDrawer({
                       }}
                       maxLength={60}
                       placeholder="title"
-                      className="border-mx-border bg-mx-card text-mx-ink rounded-mx-sm min-w-0 flex-1 border px-2 py-1 text-[13px] outline-none"
+                      className="text-mx-ink min-w-0 flex-1 rounded-md border border-black/[0.13] bg-white/40 px-1.5 py-1 text-[13px] outline-none"
                     />
                   ) : (
                     <button
                       onClick={() => onSelect(c.id)}
                       onDoubleClick={() => startRename(c)}
+                      title="Double-click to rename"
                       className="min-w-0 flex-1 text-left"
                     >
-                      <div className="text-mx-ink truncate text-[13px] font-medium">
+                      <div className="text-mx-ink truncate text-[13px] font-medium tracking-[0.1px]">
                         {c.title || "new chat"}
                       </div>
-                      <div className="text-mx-muted text-[11px]">
+                      <div className="text-mx-ink/35 mt-px text-[11px]">
                         {formatWhen(c.last_message_at || c.created_at)}
                       </div>
                     </button>
                   )}
                   {!isRenaming ? (
-                    <div className="ml-1 flex shrink-0 items-center opacity-0 transition group-hover:opacity-100">
-                      <button
-                        onClick={() => startRename(c)}
-                        aria-label={`Rename chat: ${c.title || "new chat"}`}
-                        className="text-mx-muted hover:text-mx-ink flex size-6 items-center justify-center"
-                      >
-                        <ChatIcon name="compose" className="size-3.5" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(c.id)}
-                        aria-label={`Delete chat: ${c.title || "new chat"}`}
-                        className="text-mx-muted hover:text-mx-error flex size-6 items-center justify-center"
-                      >
-                        <Icon name="trash" className="size-3.5" />
-                      </button>
-                    </div>
+                    // iOS: a single, always-visible trash affordance per row.
+                    <button
+                      onClick={() => onDelete(c.id)}
+                      aria-label={`Delete chat: ${c.title || "new chat"}`}
+                      className="text-mx-ink/35 hover:text-mx-error ml-1 flex size-6 shrink-0 items-center justify-center transition"
+                    >
+                      <Icon name="trash" className="size-3.5" />
+                    </button>
                   ) : null}
                 </div>
               );
@@ -203,8 +198,8 @@ export default function ChatDrawer({
           </div>
         </div>
 
-        {/* Settings — coach persona + response length */}
-        <div className="border-mx-border mt-3 border-t pt-4">
+        {/* Settings — coach persona + response length, stacked at the bottom */}
+        <div className="border-mx-border mt-1 shrink-0 border-t pt-3.5">
           <CoachPicker />
         </div>
       </div>

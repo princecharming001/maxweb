@@ -48,6 +48,32 @@ export function fmtK(n?: number): string {
   return n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : `${n}`;
 }
 
+/** Port of mobile lightenHex — mix a #rrggbb toward white by `amt`, with alpha. */
+export function lightenHexA(hex: string, amt: number, a: number): string {
+  const h = (hex || "#000000").replace("#", "");
+  const full =
+    h.length === 3
+      ? h
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : h;
+  const ch = (i: number) => {
+    const v = parseInt(full.slice(i, i + 2), 16) || 0;
+    return Math.round(v + (255 - v) * amt);
+  };
+  return `rgba(${ch(0)}, ${ch(2)}, ${ch(4)}, ${a})`;
+}
+
+/* ── Native 3D "jelly" blobs — same /maxxThumbs mapping MarketplaceCard uses ── */
+const NATIVE_IDS = ["skinmax", "hairmax", "fitmax", "bonemax", "heightmax"];
+
+/** iOS NATIVE_THUMBS_CUT — background-removed blob that floats in the hero aurora. */
+export function jellyThumb(id?: string): string | null {
+  const key = String(id || "").toLowerCase();
+  return NATIVE_IDS.includes(key) ? `/maxxThumbs/cut/${key}.png` : null;
+}
+
 /** "12m · daily · morning" — the right-hand meta line for a daily-program row. */
 export function habitMetaLine(h: ExHabit): string {
   const parts: string[] = [];
@@ -115,7 +141,7 @@ export function IconBook({ className = "size-4", color }: IconProps) {
     </svg>
   );
 }
-export function IconStar({ filled, className = "size-3.5", color = "#E0A500" }: IconProps & { filled?: boolean }) {
+export function IconStar({ filled, className = "size-3", color = "#E0A500" }: IconProps & { filled?: boolean }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill={filled ? color : "none"} stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.2l1-5.8L3.5 9.2l5.9-.9z" />
@@ -149,6 +175,69 @@ export function Monogram({ name, color, size = 42 }: { name?: string; color: str
     >
       <span style={{ marginTop: -1 }}>{ch}</span>
     </span>
+  );
+}
+
+/* ── JellyHero — iOS photo-free, object-in-light hero ──────────────────────
+   The max's glossy 3D "jelly" blob floats in a soft brand aurora (main pool of
+   brand light + warm/cool blooms over the white canvas) above a blurred
+   contact shadow, with the gentle idle float (shadow breathes inversely).
+   Creator courses with no blob fall back to the brand-tinted serif monogram.
+   No flat colour wash, no dark photo hero for native maxes. */
+export function JellyHero({
+  id,
+  name,
+  base,
+  children,
+}: {
+  id: string;
+  name?: string;
+  base: string;
+  children?: ReactNode; // floating back chip overlay
+}) {
+  const thumb = jellyThumb(id);
+  const aurora = [
+    // main pool of brand light, centered on the icon, fades out all ways
+    `radial-gradient(46% 46% at 50% 38%, ${hexA(base, 0.36)} 0%, ${hexA(base, 0.13)} 42%, transparent 100%)`,
+    // cool bloom, top-right
+    `radial-gradient(50% 50% at 92% 14%, ${lightenHexA(base, 0.58, 0.4)} 0%, transparent 100%)`,
+    // warm bloom, top-left
+    `radial-gradient(52% 52% at 14% 2%, ${lightenHexA(base, 0.58, 0.55)} 0%, transparent 100%)`,
+  ].join(", ");
+  return (
+    <div
+      className="bg-mx-card relative -mx-5 -mt-6 mb-1 flex h-[312px] items-center justify-center overflow-hidden"
+      style={{ backgroundImage: aurora }}
+    >
+      <style>{`
+        @keyframes mx-jelly-float { from { transform: translateY(5px); } to { transform: translateY(-9px); } }
+        @keyframes mx-jelly-shadow { from { transform: scale(1); opacity: 1; } to { transform: scale(0.82); opacity: 0.7; } }
+      `}</style>
+      {children}
+      <div className="relative mt-3.5 flex items-center justify-center">
+        {/* soft blurred contact shadow — a tight pool, not a band */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-[30px] mx-auto h-10 w-[132px]"
+          style={{
+            background:
+              "radial-gradient(50% 50% at 50% 50%, rgba(42,33,24,0.22) 0%, rgba(42,33,24,0.07) 58%, transparent 100%)",
+            animation: "mx-jelly-shadow 3.4s ease-in-out infinite alternate",
+          }}
+        />
+        <span
+          className="block"
+          style={{ animation: "mx-jelly-float 3.4s ease-in-out infinite alternate" }}
+        >
+          {thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt="" draggable={false} className="size-[188px] object-contain" />
+          ) : (
+            <Monogram name={name} color={base} size={132} />
+          )}
+        </span>
+      </div>
+    </div>
   );
 }
 

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useMaxAuth } from "@/context/MaxAuthContext";
 import api from "@/lib/max/api";
 
-// Verbatim from iOS ChatConversationsDrawer PERSONAS.
+// Verbatim from iOS ChatConversationsDrawer PERSONA_OPTIONS.
 type Tone = "hardcore" | "influencer" | "gentle";
 const PERSONAS: {
   id: string;
@@ -32,6 +32,13 @@ const LENGTHS: { id: "concise" | "medium" | "detailed"; label: string; desc: str
   { id: "detailed", label: "Detailed", desc: "long, specific, numbered" },
 ];
 
+/**
+ * Coach persona + response-length controls — the bottom block of the iOS
+ * ChatConversationsDrawer: three square persona tiles (gently-floating
+ * avatars, signature-color border + bottom glow halo on the active coach,
+ * dimmed inactive figures), a hint line, then a single row of three length
+ * chips (active = ink fill) with the active length's hint below.
+ */
 export default function CoachPicker() {
   const { user, refreshUser } = useMaxAuth();
   const u = user as
@@ -79,73 +86,98 @@ export default function CoachPicker() {
   }
 
   return (
-    <div className="space-y-5">
+    <div>
+      {/* iOS FloatingAvatar: -5px bob over a 3s cycle, staggered per column. */}
+      <style>{`@keyframes mxCoachFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@media (prefers-reduced-motion:reduce){.mx-coach-float{animation:none!important}}`}</style>
+
       {/* Coach */}
-      <div>
-        <div className="mx-label mb-2">Coach</div>
-        <div className="grid grid-cols-3 gap-2">
-          {PERSONAS.map((p) => {
-            const on = p.id === personaId;
-            return (
-              <button
-                key={p.id}
-                onClick={() => pickPersona(p)}
-                aria-pressed={on}
-                className={`relative flex flex-col items-center rounded-mx-md border px-1.5 py-2.5 transition ${
-                  on ? "border-mx-ink bg-mx-ink/[0.03]" : "border-mx-border hover:border-mx-ink/25"
+      <div className="mx-label mb-2">Coach</div>
+      <div className="flex gap-2">
+        {PERSONAS.map((p, i) => {
+          const on = p.id === personaId;
+          const busy = on && savingCoach;
+          return (
+            <button
+              key={p.id}
+              onClick={() => pickPersona(p)}
+              aria-pressed={on}
+              aria-label={`Coach: ${p.label}`}
+              disabled={savingCoach}
+              className="flex min-w-0 flex-1 flex-col items-center"
+            >
+              <span
+                className={`relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border transition ${
+                  on ? "bg-white/[0.04]" : "border-mx-border bg-white/40"
+                }`}
+                style={on ? { borderColor: p.glow } : undefined}
+              >
+                {/* Soft signature-color halo behind the selected coach. */}
+                {on ? (
+                  <span
+                    aria-hidden
+                    className="absolute -bottom-7 h-[110%] w-[150%] rounded-full opacity-[0.22]"
+                    style={{ backgroundColor: p.glow }}
+                  />
+                ) : null}
+                <Image
+                  src={`/personas/${p.id}.png`}
+                  alt={p.label}
+                  width={120}
+                  height={120}
+                  className={`mx-coach-float relative size-[94%] object-contain ${on ? "" : "opacity-[0.38]"}`}
+                  style={{ animation: "mxCoachFloat 3s ease-in-out infinite", animationDelay: `${i * 240}ms` }}
+                />
+                {busy ? (
+                  <span className="absolute inset-0 flex items-center justify-center bg-white/45">
+                    <span
+                      className="size-4 animate-spin rounded-full border-2 border-black/10"
+                      style={{ borderTopColor: p.glow }}
+                    />
+                  </span>
+                ) : null}
+              </span>
+              <span
+                className={`mt-[7px] w-full truncate text-center text-[11.5px] tracking-[0.1px] ${
+                  on ? "text-mx-ink font-semibold" : "text-mx-ink/55 font-medium"
                 }`}
               >
-                <span
-                  className="relative flex size-11 items-center justify-center rounded-full"
-                  style={{ boxShadow: on ? `0 0 0 2px ${p.glow}55, 0 6px 16px ${p.glow}44` : "none" }}
-                >
-                  <Image
-                    src={`/personas/${p.id}.png`}
-                    alt={p.label}
-                    width={44}
-                    height={44}
-                    className="size-11 rounded-full object-cover"
-                  />
-                  {on && savingCoach ? (
-                    <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30">
-                      <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                    </span>
-                  ) : null}
-                </span>
-                <span className="text-mx-ink mt-1.5 text-[12px] font-medium">{p.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-mx-muted mt-2 text-center text-[12px]">{active.desc}</p>
+                {p.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
+      <p className="text-mx-ink/35 mt-2.5 text-center text-[11.5px] tracking-[0.1px]">{active.desc}</p>
 
-      {/* Length */}
-      <div>
-        <div className="mx-label mb-2">Length</div>
-        <div className="border-mx-border overflow-hidden rounded-mx-md border">
-          {LENGTHS.map((l, i) => {
-            const on = l.id === length;
-            return (
-              <button
-                key={l.id}
-                onClick={() => pickLength(l.id)}
-                className={`flex w-full items-center justify-between px-3 py-2 text-left transition ${
-                  i > 0 ? "border-mx-border border-t" : ""
-                } ${on ? "bg-mx-ink/[0.03]" : "hover:bg-mx-surface"}`}
-              >
-                <div>
-                  <div className={`text-[13px] ${on ? "text-mx-ink font-medium" : "text-mx-ink-2"}`}>
-                    {l.label}
-                  </div>
-                  <div className="text-mx-muted text-[11px]">{l.desc}</div>
-                </div>
-                {on ? <span className="text-mx-accent text-[13px]">✓</span> : null}
-              </button>
-            );
-          })}
-        </div>
+      {/* Length — single-row segmented chips */}
+      <div className="mx-label mb-2 mt-3.5">Length</div>
+      <div className="flex gap-1.5">
+        {LENGTHS.map((l) => {
+          const on = l.id === length;
+          const busy = on && savingLen;
+          return (
+            <button
+              key={l.id}
+              onClick={() => pickLength(l.id)}
+              disabled={savingLen}
+              className={`rounded-mx-sm flex min-w-0 flex-1 items-center justify-center border py-[9px] text-[12.5px] tracking-[0.1px] transition ${
+                on
+                  ? "border-mx-ink bg-mx-ink font-semibold text-white"
+                  : "border-mx-border text-mx-ink bg-white/40 font-medium hover:bg-white/[0.58]"
+              }`}
+            >
+              {busy ? (
+                <span className="size-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              ) : (
+                l.label
+              )}
+            </button>
+          );
+        })}
       </div>
+      <p className="text-mx-ink/35 mt-2 text-center text-[11px] tracking-[0.1px]">
+        {LENGTHS.find((o) => o.id === length)?.desc}
+      </p>
     </div>
   );
 }

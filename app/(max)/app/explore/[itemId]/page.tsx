@@ -35,6 +35,7 @@ import {
   IconPlay,
   IconShield,
   IconVerified,
+  JellyHero,
   Monogram,
   Section,
   StatsGridCreator,
@@ -44,6 +45,22 @@ import {
 } from "@/components/max/explore/detail-parts";
 
 const GOLD = "#2C6BED";
+
+// Brief, looksmax-native description of what this max actually is. Honest —
+// describes the real target areas in the community's own vocabulary. Falls
+// back to the item's own copy for courses / unknown maxes. (Verbatim iOS.)
+const LOOKSMAX_BLURB: Record<string, string> = {
+  skinmax:
+    "Skin is your #1 halo — clear, even, glassy skin lifts how your whole face reads. Skinmax repairs your barrier, kills texture, redness and marks, and dials in that lit-from-within glow.",
+  hairmax:
+    "Hair frames the entire face — one of the highest-impact halos there is. Hairmax works your density, hairline and scalp health so you keep, and grow, a thick, frame-defining mane.",
+  fitmax:
+    "Body fat hides your bone structure; leanness reveals it. Fitmax leans you out and builds the right muscle so your jaw, cheekbones and frame come forward and mog.",
+  bonemax:
+    "Bone structure sets your ceiling. Bonemax trains your jaw, masseter, neck and posture — mewing and tension work — to sharpen your profile and harden your frame.",
+  heightmax:
+    "Height and posture carry presence. Heightmax is decompression, posture and frame work to decompress your spine, stand taller and own more space.",
+};
 
 /** Curriculum rows straight from the bundled course — same data the reader uses. */
 function curriculumFromCourse(
@@ -60,9 +77,9 @@ function BackChip() {
     <Link
       href="/app/explore"
       aria-label="Back"
-      className="text-mx-ink absolute left-3 top-3 z-10 flex size-9 items-center justify-center rounded-full bg-white/85 shadow-sm backdrop-blur"
+      className="text-mx-ink absolute left-3.5 top-3 z-10 flex size-[38px] items-center justify-center rounded-full bg-white/85 backdrop-blur"
     >
-      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="m15 6-6 6 6 6" />
       </svg>
     </Link>
@@ -229,6 +246,7 @@ export default function ItemDetailPage({
     (creatorMaxx ? "Creator max" : isCourse ? "Course" : "Max")
   ).toUpperCase();
   const maxBlurb =
+    LOOKSMAX_BLURB[String(item.id || "").toLowerCase()] ||
     d?.long_description ||
     courseDef?.subtitle ||
     item.tagline ||
@@ -268,15 +286,9 @@ export default function ItemDetailPage({
           />
         </div>
       ) : (
-        <div
-          className="relative -mx-5 -mt-6 mb-1 flex h-[300px] items-center justify-center overflow-hidden"
-          style={{
-            background: `radial-gradient(120% 85% at 50% 32%, ${hexA(base, 0.24)} 0%, ${hexA(base, 0.08)} 44%, var(--mx-card) 100%)`,
-          }}
-        >
+        <JellyHero id={item.id} name={item.title} base={base}>
           <BackChip />
-          <Monogram name={item.title} color={base} size={120} />
-        </div>
+        </JellyHero>
       )}
 
       {/* ── Header — type-led ────────────────────────────────────────────── */}
@@ -287,7 +299,7 @@ export default function ItemDetailPage({
             {kicker}
           </span>
         </div>
-        <h1 className="font-mx-serif text-mx-ink text-[42px] leading-[1.05] tracking-[-0.02em]">
+        <h1 className="font-mx-serif text-mx-ink text-[44px] leading-[47px] tracking-[-1px]">
           {item.title}
         </h1>
         <div className="mt-[18px] h-[3px] w-[38px] rounded-full" style={{ background: base }} />
@@ -556,7 +568,7 @@ export default function ItemDetailPage({
           type="button"
           onClick={onCta}
           disabled={busy}
-          className="text-mx-ink pointer-events-auto flex h-[58px] w-full items-center justify-center rounded-full border border-black/[0.06] bg-white text-[16px] font-semibold tracking-[0.2px] shadow-[0_10px_28px_rgba(58,46,85,0.18)] transition active:scale-[0.98] disabled:opacity-70"
+          className="text-mx-ink pointer-events-auto flex h-[58px] w-full items-center justify-center rounded-full border border-white/55 bg-white/60 text-[16px] font-semibold tracking-[0.2px] shadow-[0_10px_28px_rgba(58,46,85,0.18)] backdrop-blur-xl transition active:scale-[0.98] disabled:opacity-70"
         >
           {busy ? <Spinner className="size-5" /> : <span className="truncate px-4">{ctaLabel}</span>}
         </button>

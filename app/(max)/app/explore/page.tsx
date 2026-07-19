@@ -248,7 +248,7 @@ function ExploreInner() {
               </div>
             ) : (
               <div className="mt-16 flex flex-col items-center text-center">
-                <ComingSoonMark />
+                <LaughCryMark />
                 <h2 className="font-mx-serif text-mx-ink mt-[18px] text-[26px] tracking-[-0.4px]">
                   No maxes yet
                 </h2>
@@ -262,32 +262,14 @@ function ExploreInner() {
           {/* Creator tab with no live creators — the genuine empty state */}
           {tab === "creator" && !hasCreatorCards ? (
             <div className="mt-16 flex flex-col items-center text-center">
-              <ComingSoonMark />
+              <CreatorMorphMark />
               <h2 className="font-mx-serif text-mx-ink mt-[18px] text-[26px] tracking-[-0.4px]">
                 Creators coming soon
               </h2>
               <p className="text-mx-muted mt-2 max-w-[280px] text-[14.5px] leading-[21px]">
                 We&apos;re lining up creator courses. Check back shortly.
               </p>
-              <div className="border-mx-border bg-mx-card mt-7 flex h-[50px] items-center gap-2 rounded-full border px-[22px]">
-                <span className="text-mx-ink text-[15.5px] font-semibold tracking-[0.2px]">
-                  Host your own max
-                </span>
-                <svg
-                  viewBox="0 0 24 24"
-                  className="text-mx-ink size-[17px]"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </div>
-              <p className="text-mx-muted mt-3.5 max-w-[270px] text-[12.5px] leading-[18px]">
-                First come, first served.
-              </p>
+              <HostYourOwnMax />
             </div>
           ) : null}
 
@@ -322,27 +304,86 @@ function ExploreInner() {
               </div>
             </>
           ) : null}
+
+          {/* iOS: the Creator tab keeps "Host your own max" below the grid. */}
+          {tab === "creator" && hasCreatorCards ? (
+            <div className="mt-4 flex flex-col items-center text-center">
+              <HostYourOwnMax />
+            </div>
+          ) : null}
         </>
       )}
     </div>
   );
 }
 
-/** Small abstract mark for the empty states (no Apple emoji in UI). */
-function ComingSoonMark() {
+/** iOS LaughCryIcon stand-in — abstract laugh-cry face mark at the app's 88pt
+ *  size for the Active tab's "No maxes yet" state (no Apple emoji in UI). */
+function LaughCryMark() {
   return (
     <svg
       viewBox="0 0 88 88"
-      className="text-mx-ink size-[84px]"
+      className="text-mx-ink size-[88px]"
       fill="none"
       stroke="currentColor"
       strokeWidth="2.4"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M44 12c14 6 22 16 22 32 0 12-9 22-22 22S22 56 22 44c0-7 3-13 8-17 1 5 4 8 8 9-4-9-2-17 6-24z" />
-      <path d="M30 70c0-8 6-12 14-12s14 4 14 12" />
+      <circle cx="42" cy="44" r="26" />
+      <path d="M31 39c2-3.2 6-3.2 8 0" />
+      <path d="M45 39c2-3.2 6-3.2 8 0" />
+      <path d="M31 50c3 7.5 7.5 11 11 11s8-3.5 11-11z" />
+      <path d="M73 42c3.6 4.8 5.4 7.8 5.4 10.6a5.4 5.4 0 0 1-10.8 0c0-2.8 1.8-5.8 5.4-10.6z" />
     </svg>
+  );
+}
+
+/** iOS CreatorMorphIcon stand-in — abstract morphing-jelly mark at the app's
+ *  92pt size for the Creator tab's "coming soon" state. */
+function CreatorMorphMark() {
+  return (
+    <svg
+      viewBox="0 0 92 92"
+      className="text-mx-ink size-[92px]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M46 13c13 1.6 24.8 10.4 27 23.4 2.2 13.2-5.2 27.4-16.4 33.6-11.2 6.2-25.4 4-33.6-5S14 40.8 20 29.8 33 11.4 46 13z" />
+      <path d="M33 46c1.8-8 8.8-13.4 17-12.4" />
+      <circle cx="61" cy="59" r="3" />
+    </svg>
+  );
+}
+
+/** The "Host your own max" call-to-apply pill + hint — iOS renders this both
+ *  inside the Creator empty state and below the grid once creators are live. */
+function HostYourOwnMax() {
+  return (
+    <>
+      <div className="border-mx-border bg-mx-card mt-7 flex h-[50px] items-center gap-2 rounded-full border px-[22px]">
+        <span className="text-mx-ink text-[15.5px] font-semibold tracking-[0.2px]">
+          Host your own max
+        </span>
+        <svg
+          viewBox="0 0 24 24"
+          className="text-mx-ink size-[17px]"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </div>
+      <p className="text-mx-muted mt-3.5 max-w-[270px] text-[12.5px] leading-[18px]">
+        First come, first served.
+      </p>
+    </>
   );
 }
 
