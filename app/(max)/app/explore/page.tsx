@@ -5,14 +5,47 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import api, { type MarketplaceItem } from "@/lib/max/api";
 import { queryKeys } from "@/lib/max/queryClient";
+import { useMaxAuth } from "@/context/MaxAuthContext";
 import { Spinner } from "@/components/max/ui";
 import MarketplaceCard, { FeatureCard, MyMaxRow } from "@/components/max/explore/MarketplaceCard";
 
 type Tab = "mine" | "all" | "native" | "creator";
 
+/** iOS services/api.ts isCreatorMaxx(): first-class creator maxxes ride the
+ *  courses[] payload with creator_maxx=true. Legacy seed "courses" (no flag)
+ *  stay excluded from All — natives only, exactly like the app. */
+function isCreatorMaxx(item: MarketplaceItem | null | undefined): boolean {
+  return !!(item as (MarketplaceItem & { creator_maxx?: boolean }) | null | undefined)?.creator_maxx;
+}
+
+/**
+ * iOS lib/personalization.ts rankByGoals(): stable goal-ranked reorder — items
+ * whose id matches one of `goalIds` come first, in goal-priority order;
+ * everything else keeps its original relative order. NEVER drops, hides, or
+ * duplicates an item — pure reorder. With no goals the order is unchanged.
+ */
+function rankByGoals<T>(items: T[], goalIds: string[], idOf: (item: T) => string): T[] {
+  if (!Array.isArray(items) || items.length === 0) return [];
+  if (!goalIds || goalIds.length === 0) return items.slice();
+  const rankOf = new Map<string, number>();
+  goalIds.forEach((g, i) => {
+    const k = String(g || "").toLowerCase();
+    if (k && !rankOf.has(k)) rankOf.set(k, i);
+  });
+  const FAR = Number.MAX_SAFE_INTEGER;
+  return items
+    .map((it, i) => {
+      const key = String(idOf(it) || "").toLowerCase();
+      return { it, i, r: rankOf.has(key) ? (rankOf.get(key) as number) : FAR };
+    })
+    .sort((a, b) => a.r - b.r || a.i - b.i)
+    .map((x) => x.it);
+}
+
 function ExploreInner() {
   const params = useSearchParams();
   const purchased = params.get("purchased");
+  const { user } = useMaxAuth();
   const [tab, setTab] = useState<Tab>("all");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -43,7 +76,10 @@ function ExploreInner() {
 
   const maxxes = useMemo(() => (q.data?.maxxes ?? []).filter(matches), [q.data, matches]);
   const courses = useMemo(() => (q.data?.courses ?? []).filter(matches), [q.data, matches]);
-  const hasCreatorCards = (q.data?.courses ?? []).length > 0;
+  // iOS: creator maxxes are courses[] entries with creator_maxx=true — they
+  // render on the Creator tab AND append to All; legacy seed courses don't.
+  const creatorCards = useMemo(() => courses.filter(isCreatorMaxx), [courses]);
+  const hasCreatorCards = (q.data?.courses ?? []).some(isCreatorMaxx);
 
   // The user's entered maxes power the "Active" tab (web proxy for iOS myMaxxes).
   const entered = useMemo(
@@ -51,15 +87,42 @@ function ExploreInner() {
     [q.data, matches],
   );
 
-  // iOS: All = natives + creator cards; Native = maxes; Creator = creator cards.
-  const combined = useMemo<MarketplaceItem[]>(() => {
-    if (tab === "mine") return [];
-    if (tab === "creator") return courses;
-    if (tab === "native") return maxxes;
-    return [...maxxes, ...courses];
-  }, [tab, maxxes, courses]);
+  // iOS usePersonalization().goalIds — the user's onboarding goals, lowercased,
+  // deduped, in priority order (lib/personalization.ts asGoalIds).
+  const goalIds = useMemo(() => {
+    const raw = user?.onboarding?.goals;
+    if (!Array.isArray(raw)) return [];
+    const out: string[] = [];
+    const seen = new Set<string>();
+    for (const g of raw) {
+      const s = typeof g === "string" ? g.trim().toLowerCase() : "";
+      if (s && !seen.has(s)) {
+        seen.add(s);
+        out.push(s);
+      }
+    }
+    return out;
+  }, [user]);
 
-  const suggested = combined.slice(0, 5);
+  // iOS baseCombined: All = natives + creator cards; Native = maxes; Creator = creator cards.
+  const baseCombined = useMemo<MarketplaceItem[]>(() => {
+    if (tab === "mine") return [];
+    if (tab === "creator") return creatorCards;
+    if (tab === "native") return maxxes;
+    return [...maxxes, ...creatorCards];
+  }, [tab, maxxes, creatorCards]);
+
+  // iOS: quietly float the maxes matching the user's goals to the top — reorder
+  // only, never hide; no goals → original order. (The app gates this on the
+  // personalizedUI flag, default ON; the web client has no flags fetch, so it
+  // follows the built-in default — exactly what an iOS client does offline.)
+  const combined = useMemo<MarketplaceItem[]>(
+    () => (goalIds.length ? rankByGoals(baseCombined, goalIds, (it) => it.id) : baseCombined),
+    [goalIds, baseCombined],
+  );
+
+  // iOS: the "New" carousel is the first 5 of the goal-ranked combined list.
+  const suggested = useMemo(() => combined.slice(0, 5), [combined]);
   const gridLabel = tab === "native" ? "All maxes" : tab === "creator" ? "Creators" : "All";
   const emptyMsg =
     tab !== "mine" && combined.length === 0 && !(tab === "creator" && !hasCreatorCards)

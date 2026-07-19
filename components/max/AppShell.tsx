@@ -117,9 +117,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* ── Mobile bottom tabs ──────────────────────────────────────── */}
-      {/* Center "Scan" is an elevated glass disc that floats above the bar,
-          mirroring the iOS ScanCenterButton (no label, soft float shadow). */}
-      <nav className="border-mx-border bg-mx-card/95 fixed inset-x-0 bottom-0 z-30 flex items-end border-t pb-[calc(env(safe-area-inset-bottom)+2px)] backdrop-blur lg:hidden">
+      {/* Mirrors the iOS TabBarFrost: frosted near-white glass (24px blur — the
+          same value TabNavigator's web fallback uses), milky fill with a brighter
+          top-down sheen, a bright hairline top rim (the glass edge — NOT a dark
+          border), and the soft shadows.lg float. Center "Scan" is the elevated
+          glass disc from ScanCenterButton (no label, always white glass). */}
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex items-end border-t border-white/85 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.83),rgba(255,255,255,0.62)_40%)] pt-1 pb-[calc(env(safe-area-inset-bottom)+2px)] shadow-[0_-8px_24px_rgba(0,0,0,0.07)] backdrop-blur-xl lg:hidden">
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
           if (item.icon === "scan") {
@@ -130,11 +133,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 aria-label="Scan"
                 className="flex flex-1 items-center justify-center"
               >
-                <span
-                  className={`-mt-7 flex size-[50px] items-center justify-center rounded-full border border-white/95 shadow-[0_8px_16px_rgba(28,30,38,0.3)] backdrop-blur ${
-                    active ? "bg-mx-accent text-white" : "bg-white/75 text-mx-ink"
-                  }`}
-                >
+                {/* iOS never tints this disc when active — always the white
+                    glass disc with an ink scan glyph. */}
+                <span className="text-mx-ink -mt-7 flex size-[50px] items-center justify-center rounded-full border border-white/95 bg-white/75 shadow-[0_8px_16px_rgba(28,30,38,0.3)] backdrop-blur-xl">
                   <Icon name="scan" className="size-[22px]" />
                 </span>
               </Link>
@@ -144,11 +145,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] ${
-                active ? "text-mx-accent" : "text-mx-muted"
+              className={`flex flex-1 flex-col items-center gap-1 py-2 text-[10px] font-medium leading-none tracking-[0.2px] ${
+                active ? "text-mx-ink" : "text-mx-muted"
               }`}
             >
-              <Icon name={item.icon} className="size-5" />
+              <Icon name={item.icon} className="size-[22px]" />
               {item.label}
             </Link>
           );

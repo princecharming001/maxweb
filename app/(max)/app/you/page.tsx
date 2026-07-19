@@ -233,7 +233,10 @@ export default function YouPage() {
                 All scans →
               </Link>
             </div>
-            {calStatus.kind !== "ok" ? (
+            {/* iOS shows the month grid even with zero scans (ProfileScreen
+                renders ProgressCalendar unconditionally) — only loading /
+                paywall / error replace it with a status card. */}
+            {calStatus.kind !== "ok" && calStatus.kind !== "empty" ? (
               <CalendarStatusCard
                 status={calStatus}
                 onUpgrade={() => router.push("/app/you/subscription")}

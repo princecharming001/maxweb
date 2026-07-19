@@ -54,7 +54,10 @@ export default function HomePage() {
 
   // Merge schedules → per-date rows, and derive the day strip + "DAY X" index.
   const { byDate, today, todayIndex, days } = useMemo(() => {
-    const todayISO = new Date().toISOString().split("T")[0];
+    // LOCAL date, not toISOString() (UTC) — after 5pm PT the UTC date is
+    // tomorrow, which mislabeled the kicker TOMORROW. iOS uses the local day.
+    const now = new Date();
+    const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     if (!full) {
       return {
         byDate: {} as Record<string, MergedScheduleTask[]>,

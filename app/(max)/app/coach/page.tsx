@@ -426,7 +426,7 @@ function CoachInner() {
 
   return (
     <div className="flex h-[calc(100dvh-88px)] flex-col lg:h-[calc(100vh-80px)]">
-      {/* ── Header: hamburger · serif Max · new chat ─────────────────────── */}
+      {/* ── Header: hamburger · sans Max · new chat ──────────────────────── */}
       <div className="border-mx-border mb-2 flex items-center justify-between border-b pb-3">
         <button
           onClick={() => setDrawerOpen(true)}
@@ -435,7 +435,8 @@ function CoachInner() {
         >
           <Icon name="menu" className="size-6" />
         </button>
-        <div className="font-mx-serif text-mx-ink text-[22px] leading-none tracking-[-0.3px]">
+        {/* iOS cg.headerTitle: Matter-SemiBold 17 / -0.2 tracking */}
+        <div className="font-mx-sans text-mx-ink text-[17px] font-semibold leading-none tracking-[-0.2px]">
           Max
         </div>
         <button
