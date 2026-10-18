@@ -24,13 +24,20 @@ function normalizeRelativeLegalLinks(content: string) {
       /href="community-guidelines\.html"/g,
       'href="/legal/community-guidelines"'
     )
-    .replace(/href="cookies\.html"/g, 'href="/legal/cookies"');
+    .replace(/href="cookies\.html"/g, 'href="/legal/cookies"')
+    .replace(/href="health-data\.html"/g, 'href="/legal/health-data"');
 }
 
 export default async function LegalDocument({
   file,
 }: {
-  file: "index.html" | "terms.html" | "privacy.html" | "community-guidelines.html" | "cookies.html";
+  file:
+    | "index.html"
+    | "terms.html"
+    | "privacy.html"
+    | "community-guidelines.html"
+    | "cookies.html"
+    | "health-data.html";
 }) {
   const publicPath = path.join(process.cwd(), "public", "legal", file);
   const rawHtml = await fs.readFile(publicPath, "utf-8");

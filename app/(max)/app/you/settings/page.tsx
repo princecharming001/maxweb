@@ -19,6 +19,7 @@ const LEGAL_ROWS = [
   { href: "/legal/terms", label: "Terms of service" },
   { href: "/legal/community-guidelines", label: "Community guidelines" },
   { href: "/legal/cookies", label: "Cookie notice" },
+  { href: "/legal/health-data", label: "Consumer health data policy" },
 ];
 
 /** Settings — mirrors iOS SettingsScreen: borderless sections (label + rows

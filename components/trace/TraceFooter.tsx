@@ -16,6 +16,9 @@ export default function TraceFooter() {
           <Link href="/legal/cookies" className="transition-colors hover:text-white">
             Cookies
           </Link>
+          <Link href="/legal/health-data" className="transition-colors hover:text-white">
+            Consumer Health Data Privacy
+          </Link>
           <Link
             href="/legal/community-guidelines"
             className="transition-colors hover:text-white"

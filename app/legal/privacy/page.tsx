@@ -243,6 +243,19 @@ export default function PrivacyPage() {
             may also contact us to request access, correction, or deletion of
             your information where applicable.
           </p>
+          <p className="mt-3 text-muted text-[14px] leading-relaxed">
+            Health information you give us (for example your goals, supplements,
+            peptides and the answers to their safety questions) is covered by
+            our{" "}
+            <Link
+              href="/legal/health-data"
+              className="text-foreground underline underline-offset-2"
+            >
+              Consumer Health Data Privacy Policy
+            </Link>
+            , including how to access, delete or stop sharing it. We never sell
+            health data or use it for advertising.
+          </p>
         </section>
 
         <div className="h-px bg-border/40 my-10" />
