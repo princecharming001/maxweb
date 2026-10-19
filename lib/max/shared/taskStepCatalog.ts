@@ -347,9 +347,9 @@ export const TASK_STEP_CATALOG: Record<string, TaskDetail> = {
 
     'fit.sleep_cue': {
         steps: [
-            { instruction: 'Set a wind-down alarm 45 minutes before your target sleep time. When it goes off, stop screens.' },
+            { instruction: 'About 45 minutes before your target sleep time, start your wind-down and put screens away.' },
             { instruction: 'Dim lights in your space. Light below 50 lux (bedside lamp level) supports melatonin production.', tip: 'The hour before sleep is as important as the sleep itself. Treat it as a transition, not a cutoff.' },
-            { instruction: 'Do a non-stimulating activity: read, stretch, journal, or meditate. This cues your brain that sleep is coming.' },
+            { instruction: 'Do something calm in low light: read on paper, stretch, or breathe slowly (in for about 4 seconds, out for about 6). This cues your body that sleep is coming.' },
         ],
     },
 
