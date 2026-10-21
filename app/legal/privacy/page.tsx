@@ -132,6 +132,16 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong className="text-foreground font-medium">
+                Product analytics, error tracking and session replay:
+              </strong>{" "}
+              PostHog, which receives your account ID, the screens you open,
+              which buttons you tap (not their text), error and crash details,
+              and screen recordings with every text field and image masked. The
+              coach chat, task guides and chat threads are never recorded, and
+              people running Peptidemax are never recorded.
+            </li>
+            <li>
+              <strong className="text-foreground font-medium">
                 Payment processing:
               </strong>{" "}
               Payments and subscription processing may be handled by third-party
